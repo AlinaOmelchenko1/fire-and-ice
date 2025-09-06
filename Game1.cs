@@ -9,10 +9,11 @@ namespace fire_and_ice
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private PlatformProtagonist _player;
-        private ImageLevelBackground _levelBackground; // Changed to image-based background
+        private ColorCollisionProtagonist _player; // Changed to color collision protagonist
+        private ImageLevelBackground _levelBackground; // Background with color collision
         private Texture2D _pixelTexture; // For drawing debug hitboxes
         private bool _showHitboxes = false; // Toggle for debugging
+        private bool _showColorDebug = false; // Toggle for color debugging
         private KeyboardState _previousKeyboardState;
 
         public Game1() //create instance of graphic manager and point to content (where to get images , from imported by monogame)
@@ -36,8 +37,7 @@ namespace fire_and_ice
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Create image-based level background
-            // Set second parameter to true if you want scrolling camera
+            // Create image-based level background with color collision
             _levelBackground = new ImageLevelBackground(GraphicsDevice, Content, false);
 
             // Create pixel texture for hitbox debugging
@@ -52,16 +52,20 @@ namespace fire_and_ice
             int frameWidth = heroTexture.Width / frameCount;  // Total width divided by 4
             int frameHeight = heroTexture.Height;  // Full height of the image
 
-            // Start position - adjust these coordinates to match your level image
+            // Start position - character will fall to ground based on colors
             Vector2 startPosition = new Vector2(
-                100, // X position - adjust based on your level
-                GraphicsDevice.Viewport.Height - 160 - frameHeight  // Y position - above bottom platform
+                0, // X position
+               GraphicsDevice.Viewport.Height - 20   // Y position - start high so character falls to ground
             );
-
-            _player = new PlatformProtagonist(heroTexture, startPosition, frameWidth, frameHeight, frameCount);
+            System.Diagnostics.Debug.WriteLine($"Setting start position to: {startPosition}");
+            _player = new ColorCollisionProtagonist(heroTexture, startPosition, frameWidth, frameHeight, frameCount, _levelBackground.CollisionSystem);
 
             // Set the screen bounds
             _player.SetBounds(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+
+            // Debug: Sample colors from the bottom of the screen to help setup
+            Rectangle sampleArea = new Rectangle(0, GraphicsDevice.Viewport.Height - 200, GraphicsDevice.Viewport.Width, 200);
+            _levelBackground.SampleColorsInArea(sampleArea);
         }
 
         protected override void Update(GameTime gameTime)
@@ -76,8 +80,16 @@ namespace fire_and_ice
             if (currentKeyboardState.IsKeyDown(Keys.H) && !_previousKeyboardState.IsKeyDown(Keys.H))
                 _showHitboxes = !_showHitboxes;
 
-            // Update player with platform collision
-            _player.Update(gameTime, _levelBackground.PlatformHitboxes);
+            // Toggle color debugging (press C - only once per press)
+            if (currentKeyboardState.IsKeyDown(Keys.C) && !_previousKeyboardState.IsKeyDown(Keys.C))
+            {
+                _showColorDebug = !_showColorDebug;
+                if (_showColorDebug)
+                    _player.DebugColors(); // Print colors under character
+            }
+
+            // Update player with color collision
+            _player.Update(gameTime);
 
             // Update camera if scrolling is enabled
             _levelBackground.UpdateCamera(_player.Position);
@@ -98,10 +110,9 @@ namespace fire_and_ice
             // Draw player
             _player.Draw(_spriteBatch);
 
-            // Debug: Draw hitboxes if enabled
+            // Debug: Draw character hitbox if enabled
             if (_showHitboxes)
             {
-                _levelBackground.DrawPlatformHitboxes(_spriteBatch);
                 _player.DrawHitbox(_spriteBatch, _pixelTexture);
             }
 
