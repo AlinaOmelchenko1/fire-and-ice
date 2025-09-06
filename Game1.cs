@@ -9,8 +9,8 @@ namespace fire_and_ice
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private PlatformProtagonist _player; // Changed to platform protagonist
-        private PlatformCaveBackground _caveBackground; // Changed to platform cave background
+        private PlatformProtagonist _player;
+        private ImageLevelBackground _levelBackground; // Changed to image-based background
         private Texture2D _pixelTexture; // For drawing debug hitboxes
         private bool _showHitboxes = false; // Toggle for debugging
         private KeyboardState _previousKeyboardState;
@@ -20,6 +20,10 @@ namespace fire_and_ice
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            // You can adjust window size to match your level image dimensions if needed
+            // _graphics.PreferredBackBufferWidth = 1024;
+            // _graphics.PreferredBackBufferHeight = 768;
         }
 
         protected override void Initialize() //imported by monogame initialise the game 
@@ -31,7 +35,10 @@ namespace fire_and_ice
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _caveBackground = new PlatformCaveBackground(GraphicsDevice); // Use platform cave background
+
+            // Create image-based level background
+            // Set second parameter to true if you want scrolling camera
+            _levelBackground = new ImageLevelBackground(GraphicsDevice, Content, false);
 
             // Create pixel texture for hitbox debugging
             _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
@@ -45,11 +52,10 @@ namespace fire_and_ice
             int frameWidth = heroTexture.Width / frameCount;  // Total width divided by 4
             int frameHeight = heroTexture.Height;  // Full height of the image
 
-
-            // Start position - on the bottom floor
+            // Start position - adjust these coordinates to match your level image
             Vector2 startPosition = new Vector2(
-                GraphicsDevice.Viewport.Width / 2 - frameWidth / 2, // Center horizontally
-                GraphicsDevice.Viewport.Height - 120 - frameHeight  // On bottom platform
+                100, // X position - adjust based on your level
+                GraphicsDevice.Viewport.Height - 160 - frameHeight  // Y position - above bottom platform
             );
 
             _player = new PlatformProtagonist(heroTexture, startPosition, frameWidth, frameHeight, frameCount);
@@ -71,7 +77,10 @@ namespace fire_and_ice
                 _showHitboxes = !_showHitboxes;
 
             // Update player with platform collision
-            _player.Update(gameTime, _caveBackground.PlatformHitboxes);
+            _player.Update(gameTime, _levelBackground.PlatformHitboxes);
+
+            // Update camera if scrolling is enabled
+            _levelBackground.UpdateCamera(_player.Position);
 
             _previousKeyboardState = currentKeyboardState;
             base.Update(gameTime);
@@ -83,8 +92,8 @@ namespace fire_and_ice
 
             _spriteBatch.Begin();
 
-            // Draw platform cave background
-            _caveBackground.Draw(_spriteBatch);
+            // Draw the image-based level background
+            _levelBackground.Draw(_spriteBatch);
 
             // Draw player
             _player.Draw(_spriteBatch);
@@ -92,7 +101,7 @@ namespace fire_and_ice
             // Debug: Draw hitboxes if enabled
             if (_showHitboxes)
             {
-                _caveBackground.DrawPlatformHitboxes(_spriteBatch);
+                _levelBackground.DrawPlatformHitboxes(_spriteBatch);
                 _player.DrawHitbox(_spriteBatch, _pixelTexture);
             }
 
