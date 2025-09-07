@@ -5,31 +5,49 @@ using System;
 
 namespace fire_and_ice
 {
-    public class Game1 : Game //inheritance 
+    public class Game1 : Game
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private ColorCollisionProtagonist _player; // Changed to color collision protagonist
-        private ImageLevelBackground _levelBackground; // Background with color collision
-        private Texture2D _pixelTexture; // For drawing debug hitboxes
-        private bool _showHitboxes = false; // Toggle for debugging
-        private bool _showColorDebug = false; // Toggle for color debugging
+        private Texture2D _levelTexture;
+        private Texture2D _heroTexture;
+        private Texture2D _pixelTexture;
+        private Texture2D _collisionMapTexture;  // ADD THIS IF MISSING
+        private Color[] _collisionMapData;        // ADD THIS IF MISSING
+        // Simple player variables
+        private Vector2 _playerPosition;
+        private Vector2 _playerVelocity;
+        private int _frameWidth, _frameHeight;
+        private float _gravity = 800f;
+        private float _jumpPower = 400f;
+        private float _moveSpeed = 200f;
+        private bool _isOnGround = false;
+        private bool _wasJumpPressed = false;
+
+        // Animation
+        private int _currentFrame = 0;
+        private double _animationTimer = 0;
+        private double _animationInterval = 0.15;
+
+        // Debug
+        private bool _showHitboxes = false;
+        private bool _showCollisionMap = false;
         private KeyboardState _previousKeyboardState;
 
-        public Game1() //create instance of graphic manager and point to content (where to get images , from imported by monogame)
+        // Fixed ground level
+        private const float GROUND_Y = 420f;
+        // Platform rectangles
+        private Rectangle[] _platforms;
+
+        public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
-
-            // You can adjust window size to match your level image dimensions if needed
-            // _graphics.PreferredBackBufferWidth = 1024;
-            // _graphics.PreferredBackBufferHeight = 768;
         }
 
-        protected override void Initialize() //imported by monogame initialise the game 
+        protected override void Initialize()
         {
-            // Add initialisation logic here
             base.Initialize();
         }
 
@@ -37,81 +55,123 @@ namespace fire_and_ice
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Create image-based level background with color collision
-            _levelBackground = new ImageLevelBackground(GraphicsDevice, Content, false);
+            // Load textures
+            _levelTexture = Content.Load<Texture2D>("first_level");
+            _heroTexture = Content.Load<Texture2D>("hero_walk");
 
-            // Create pixel texture for hitbox debugging
+            // Calculate frame dimensions
+            _frameWidth = _heroTexture.Width / 4;  // 4 frames
+            _frameHeight = _heroTexture.Height;
+
+            // Create pixel texture for debug
             _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
 
-            Texture2D heroTexture = Content.Load<Texture2D>("hero_walk");
+            // Set player starting position DIRECTLY on the ground
+            _playerPosition = new Vector2(100, GROUND_Y - _frameHeight);
+            _playerVelocity = Vector2.Zero;
+            _isOnGround = true;
 
-            // The sprite sheet appears to have 4 frames horizontally
-            // Calculate the actual frame dimensions
-            int frameCount = 4;
-            int frameWidth = heroTexture.Width / frameCount;  // Total width divided by 4
-            int frameHeight = heroTexture.Height;  // Full height of the image
-
-            // FIXED: Start position - character at bottom left of screen
-            Vector2 startPosition = new Vector2(
-                50, // X position - a bit from the left edge
-                GraphicsDevice.Viewport.Height - frameHeight - 100  // Y position - properly at bottom
-            );
-
-            System.Diagnostics.Debug.WriteLine($"Setting start position to: {startPosition}");
-            System.Diagnostics.Debug.WriteLine($"Frame dimensions: {frameWidth}x{frameHeight}");
-            System.Diagnostics.Debug.WriteLine($"Screen dimensions: {GraphicsDevice.Viewport.Width}x{GraphicsDevice.Viewport.Height}");
-
-            _player = new ColorCollisionProtagonist(heroTexture, startPosition, frameWidth, frameHeight, frameCount, _levelBackground.CollisionSystem);
-
-            // Set the screen bounds
-            _player.SetBounds(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
-
-            // Debug: Sample colors from the bottom of the screen to help setup
-            Rectangle sampleArea = new Rectangle(0, GraphicsDevice.Viewport.Height - 200, GraphicsDevice.Viewport.Width, 200);
-            _levelBackground.SampleColorsInArea(sampleArea);
+            System.Diagnostics.Debug.WriteLine($"Starting position: {_playerPosition}");
+            System.Diagnostics.Debug.WriteLine($"Ground Y: {GROUND_Y}");
+            System.Diagnostics.Debug.WriteLine($"Player size: {_frameWidth}x{_frameHeight}");
         }
 
         protected override void Update(GameTime gameTime)
         {
             KeyboardState currentKeyboardState = Keyboard.GetState();
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
                 currentKeyboardState.IsKeyDown(Keys.Escape))
                 Exit();
 
-            // Toggle hitbox visibility for debugging (press H - only once per press)
+            // Toggle hitboxes with H
             if (currentKeyboardState.IsKeyDown(Keys.H) && !_previousKeyboardState.IsKeyDown(Keys.H))
             {
                 _showHitboxes = !_showHitboxes;
-                System.Diagnostics.Debug.WriteLine($"Show hitboxes: {_showHitboxes}");
             }
 
-            // Toggle color debugging (press C - only once per press)
-            if (currentKeyboardState.IsKeyDown(Keys.C) && !_previousKeyboardState.IsKeyDown(Keys.C))
-            {
-                _showColorDebug = !_showColorDebug;
-                if (_showColorDebug)
-                {
-                    _player.DebugColors(); // Print colors under character
+            // HORIZONTAL MOVEMENT
+            float moveX = 0;
+            if (currentKeyboardState.IsKeyDown(Keys.Right) || currentKeyboardState.IsKeyDown(Keys.D))
+                moveX = 1;
+            if (currentKeyboardState.IsKeyDown(Keys.Left) || currentKeyboardState.IsKeyDown(Keys.A))
+                moveX = -1;
 
-                    // Also sample colors at player's position
-                    Rectangle playerArea = new Rectangle(
-                        (int)_player.Position.X,
-                        (int)_player.Position.Y,
-                        50,
-                        50
-                    );
-                    System.Diagnostics.Debug.WriteLine("Colors around player:");
-                    _levelBackground.SampleColorsInArea(playerArea);
+            _playerVelocity.X = moveX * _moveSpeed;
+
+            // JUMPING
+            bool jumpPressed = currentKeyboardState.IsKeyDown(Keys.Space) ||
+                              currentKeyboardState.IsKeyDown(Keys.Up) ||
+                              currentKeyboardState.IsKeyDown(Keys.W);
+
+            if (jumpPressed && !_wasJumpPressed && _isOnGround)
+            {
+                _playerVelocity.Y = -_jumpPower;
+                _isOnGround = false;
+            }
+            _wasJumpPressed = jumpPressed;
+
+            // GRAVITY
+            if (!_isOnGround)
+            {
+                _playerVelocity.Y += _gravity * deltaTime;
+                if (_playerVelocity.Y > 1000)
+                    _playerVelocity.Y = 1000; // Terminal velocity
+            }
+
+            // APPLY MOVEMENT
+            _playerPosition.X += _playerVelocity.X * deltaTime;
+            _playerPosition.Y += _playerVelocity.Y * deltaTime;
+
+            // COLLISION WITH GROUND (SIMPLE)
+            float playerBottom = _playerPosition.Y + _frameHeight;
+
+            if (playerBottom >= GROUND_Y)
+            {
+                // Hit the ground
+                _playerPosition.Y = GROUND_Y - _frameHeight;
+                _playerVelocity.Y = 0;
+                _isOnGround = true;
+            }
+            else if (playerBottom >= GROUND_Y - 5 && _playerVelocity.Y >= 0)
+            {
+                // Close enough to ground and not jumping
+                _isOnGround = true;
+            }
+            else
+            {
+                // In the air
+                _isOnGround = false;
+            }
+
+            // KEEP PLAYER ON SCREEN
+            _playerPosition.X = MathHelper.Clamp(_playerPosition.X, 0,
+                GraphicsDevice.Viewport.Width - _frameWidth);
+
+            // Prevent going above screen
+            if (_playerPosition.Y < 0)
+            {
+                _playerPosition.Y = 0;
+                _playerVelocity.Y = 0;
+            }
+
+            // ANIMATION
+            if (Math.Abs(_playerVelocity.X) > 0.1f && _isOnGround)
+            {
+                _animationTimer += deltaTime;
+                if (_animationTimer > _animationInterval)
+                {
+                    _currentFrame = (_currentFrame + 1) % 4;
+                    _animationTimer = 0;
                 }
             }
-
-            // Update player with color collision
-            _player.Update(gameTime);
-
-            // Update camera if scrolling is enabled
-            _levelBackground.UpdateCamera(_player.Position);
+            else
+            {
+                _currentFrame = 0;
+                _animationTimer = 0;
+            }
 
             _previousKeyboardState = currentKeyboardState;
             base.Update(gameTime);
@@ -119,24 +179,54 @@ namespace fire_and_ice
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            _spriteBatch.Begin();
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
-            // Draw the image-based level background
-            _levelBackground.Draw(_spriteBatch);
+            // Draw level background
+            Rectangle levelDestRect = new Rectangle(0, 0,
+                GraphicsDevice.Viewport.Width,
+                GraphicsDevice.Viewport.Height);
+            _spriteBatch.Draw(_levelTexture, levelDestRect, Color.White);
 
             // Draw player
-            _player.Draw(_spriteBatch);
+            Rectangle sourceRect = new Rectangle(
+                _currentFrame * _frameWidth, 0,
+                _frameWidth, _frameHeight);
+            _spriteBatch.Draw(_heroTexture, _playerPosition, sourceRect, Color.White);
 
-            // Debug: Draw character hitbox if enabled
+            // Debug drawing
             if (_showHitboxes)
             {
-                _player.DrawHitbox(_spriteBatch, _pixelTexture);
+                // Player hitbox
+                Rectangle playerRect = new Rectangle(
+                    (int)_playerPosition.X, (int)_playerPosition.Y,
+                    _frameWidth, _frameHeight);
+                _spriteBatch.Draw(_pixelTexture, playerRect, Color.Red * 0.3f);
 
-                // Also draw some debug info on screen
-                string debugInfo = $"Player Pos: {_player.Position}\nOn Ground: {_player.IsOnGround}";
-                // Note: You'd need to add a font to display this text
+                // Draw all platforms (only if initialized)
+                if (_platforms != null)
+                {
+                    foreach (Rectangle platform in _platforms)
+                    {
+                        _spriteBatch.Draw(_pixelTexture, platform, Color.Green * 0.3f);
+                    }
+                }
+
+                // Ground line
+                Rectangle groundLine = new Rectangle(
+                    0, (int)GROUND_Y,
+                    GraphicsDevice.Viewport.Width, 2);
+                _spriteBatch.Draw(_pixelTexture, groundLine, Color.Yellow);
+            }
+
+            // Show collision map overlay
+            if (_showCollisionMap && _collisionMapTexture != null)
+            {
+                Rectangle collisionMapRect = new Rectangle(0, 0,
+                    GraphicsDevice.Viewport.Width,
+                    GraphicsDevice.Viewport.Height);
+                _spriteBatch.Draw(_collisionMapTexture, collisionMapRect, Color.White * 0.5f);
             }
 
             _spriteBatch.End();

@@ -6,18 +6,20 @@ namespace fire_and_ice
 {
     public class ImageLevelBackground
     {
+        //attributes for bacground image
         private GraphicsDevice _graphicsDevice;
         private Texture2D _backgroundTexture;
         private int _screenWidth;
         private int _screenHeight;
 
-        // Camera for scrolling (if needed)
+        // Camera for scrolling if different screen sizes
         private Vector2 _cameraPosition;
         private bool _enableScrolling;
 
-        // Color collision system
+        // Colour collision system
         private ColorCollisionSystem _collisionSystem;
 
+        //prperties instead of get method
         public Vector2 CameraPosition => _cameraPosition;
         public int LevelWidth => _backgroundTexture?.Width ?? _screenWidth;
         public int LevelHeight => _backgroundTexture?.Height ?? _screenHeight;
