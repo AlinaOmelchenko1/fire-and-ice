@@ -67,7 +67,7 @@ namespace fire_and_ice
             }
         }
 
-        // Debug method to sample colors in an area
+        // Debug method to sample colours in an area
         public void SampleColorsInArea(Rectangle area)
         {
             var colorSamples = _collisionSystem.SampleColors(area);

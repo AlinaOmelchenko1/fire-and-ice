@@ -52,12 +52,16 @@ namespace fire_and_ice
             int frameWidth = heroTexture.Width / frameCount;  // Total width divided by 4
             int frameHeight = heroTexture.Height;  // Full height of the image
 
-            // Start position - character will fall to ground based on colors
+            // FIXED: Start position - character at bottom left of screen
             Vector2 startPosition = new Vector2(
-                0, // X position
-               GraphicsDevice.Viewport.Height - 20   // Y position - start high so character falls to ground
+                50, // X position - a bit from the left edge
+                GraphicsDevice.Viewport.Height - frameHeight - 100  // Y position - properly at bottom
             );
+
             System.Diagnostics.Debug.WriteLine($"Setting start position to: {startPosition}");
+            System.Diagnostics.Debug.WriteLine($"Frame dimensions: {frameWidth}x{frameHeight}");
+            System.Diagnostics.Debug.WriteLine($"Screen dimensions: {GraphicsDevice.Viewport.Width}x{GraphicsDevice.Viewport.Height}");
+
             _player = new ColorCollisionProtagonist(heroTexture, startPosition, frameWidth, frameHeight, frameCount, _levelBackground.CollisionSystem);
 
             // Set the screen bounds
@@ -78,14 +82,29 @@ namespace fire_and_ice
 
             // Toggle hitbox visibility for debugging (press H - only once per press)
             if (currentKeyboardState.IsKeyDown(Keys.H) && !_previousKeyboardState.IsKeyDown(Keys.H))
+            {
                 _showHitboxes = !_showHitboxes;
+                System.Diagnostics.Debug.WriteLine($"Show hitboxes: {_showHitboxes}");
+            }
 
             // Toggle color debugging (press C - only once per press)
             if (currentKeyboardState.IsKeyDown(Keys.C) && !_previousKeyboardState.IsKeyDown(Keys.C))
             {
                 _showColorDebug = !_showColorDebug;
                 if (_showColorDebug)
+                {
                     _player.DebugColors(); // Print colors under character
+
+                    // Also sample colors at player's position
+                    Rectangle playerArea = new Rectangle(
+                        (int)_player.Position.X,
+                        (int)_player.Position.Y,
+                        50,
+                        50
+                    );
+                    System.Diagnostics.Debug.WriteLine("Colors around player:");
+                    _levelBackground.SampleColorsInArea(playerArea);
+                }
             }
 
             // Update player with color collision
@@ -114,6 +133,10 @@ namespace fire_and_ice
             if (_showHitboxes)
             {
                 _player.DrawHitbox(_spriteBatch, _pixelTexture);
+
+                // Also draw some debug info on screen
+                string debugInfo = $"Player Pos: {_player.Position}\nOn Ground: {_player.IsOnGround}";
+                // Note: You'd need to add a font to display this text
             }
 
             _spriteBatch.End();
