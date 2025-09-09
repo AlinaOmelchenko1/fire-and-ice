@@ -12,8 +12,9 @@ namespace fire_and_ice
         private Texture2D _levelTexture;
         private Texture2D _heroTexture;
         private Texture2D _pixelTexture;
-        private Texture2D _collisionMapTexture;  // ADD THIS IF MISSING
-        private Color[] _collisionMapData;        // ADD THIS IF MISSING
+        private Texture2D _collisionMapTexture;  
+        private Color[] _collisionMapData;  
+        
         // Simple player variables
         private Vector2 _playerPosition;
         private Vector2 _playerVelocity;
@@ -29,12 +30,12 @@ namespace fire_and_ice
         private double _animationTimer = 0;
         private double _animationInterval = 0.15;
 
-        // Debug
+        // Debugging 
         private bool _showHitboxes = false;
         private bool _showCollisionMap = false;
         private KeyboardState _previousKeyboardState;
 
-        // Fixed ground level
+        // Fixed ground level where chracter stands 
         private const float GROUND_Y = 420f;
         // Platform rectangles
         private Rectangle[] _platforms;
@@ -46,16 +47,18 @@ namespace fire_and_ice
             IsMouseVisible = true;
         }
 
+        //initialise the game from framework dont delete 
         protected override void Initialize()
         {
             base.Initialize();
         }
 
+        //
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Load textures
+            // Load images
             _levelTexture = Content.Load<Texture2D>("first_level");
             _heroTexture = Content.Load<Texture2D>("hero_walk");
 
@@ -63,7 +66,7 @@ namespace fire_and_ice
             _frameWidth = _heroTexture.Width / 4;  // 4 frames
             _frameHeight = _heroTexture.Height;
 
-            // Create pixel texture for debug
+            // Create pixel texture of hitbox and floor level for debug 
             _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
 
@@ -72,9 +75,6 @@ namespace fire_and_ice
             _playerVelocity = Vector2.Zero;
             _isOnGround = true;
 
-            System.Diagnostics.Debug.WriteLine($"Starting position: {_playerPosition}");
-            System.Diagnostics.Debug.WriteLine($"Ground Y: {GROUND_Y}");
-            System.Diagnostics.Debug.WriteLine($"Player size: {_frameWidth}x{_frameHeight}");
         }
 
         protected override void Update(GameTime gameTime)

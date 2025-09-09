@@ -1,0 +1,4 @@
+Source File,Dest File,Processor Type,Content Type,Source File Size,Dest File Size,Build Seconds
+"C:/Users/Rostyslav/source/repos/fire and ice/Content/collision_map.png","C:/Users/Rostyslav/source/repos/fire and ice/Content/bin/DesktopGL/Content/collision_map.xnb","TextureProcessor","Texture2DContent",3328052,16335661,0.308779
+"C:/Users/Rostyslav/source/repos/fire and ice/Content/first_level.png","C:/Users/Rostyslav/source/repos/fire and ice/Content/bin/DesktopGL/Content/first_level.xnb","TextureProcessor","Texture2DContent",3368260,16286773,0.2983671
+"C:/Users/Rostyslav/source/repos/fire and ice/Content/hero_walk.png","C:/Users/Rostyslav/source/repos/fire and ice/Content/bin/DesktopGL/Content/hero_walk.xnb","TextureProcessor","Texture2DContent",5601,98389,0.0845791
