@@ -1,3 +1,6 @@
+C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\Content\collision_map.xnb
+C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\Content\first_level.xnb
+C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\Content\first_level_collision.xnb
 C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\Content\hero_walk.xnb
 C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\fire and ice.exe
 C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\fire and ice.deps.json
@@ -24,12 +27,10 @@ C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.Gener
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.AssemblyInfoInputs.cache
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.AssemblyInfo.cs
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.csproj.CoreCompileInputs.cache
+C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.sourcelink.json
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and.0FBCD2FC.Up2Date
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.dll
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\refint\fire and ice.dll
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.pdb
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.genruntimeconfig.cache
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\ref\fire and ice.dll
-C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.sourcelink.json
-C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\Content\first_level.xnb
-C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\Content\collision_map.xnb

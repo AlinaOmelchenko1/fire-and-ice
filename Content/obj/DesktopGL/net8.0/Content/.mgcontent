@@ -4,7 +4,7 @@
   <Platform>DesktopGL</Platform>
   <Config />
   <SourceFiles>
-    <File>C:/Users/Rostyslav/source/repos/fire and ice/Content/collision_map.png</File>
+    <File>C:/Users/Rostyslav/source/repos/fire and ice/Content/first_level_collision.png</File>
     <File>C:/Users/Rostyslav/source/repos/fire and ice/Content/first_level.png</File>
     <File>C:/Users/Rostyslav/source/repos/fire and ice/Content/hero_walk.png</File>
   </SourceFiles>

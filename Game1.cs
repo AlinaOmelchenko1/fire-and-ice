@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
+using System.Collections.Generic;
 
 namespace fire_and_ice
 {
@@ -9,36 +9,20 @@ namespace fire_and_ice
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        private GlobalTimer _collisionTimer;
+
         private Texture2D _levelTexture;
-        private Texture2D _heroTexture;
         private Texture2D _pixelTexture;
-        private Texture2D _collisionMapTexture;  
-        private Color[] _collisionMapData;  
-        
-        // Simple player variables
-        private Vector2 _playerPosition;
-        private Vector2 _playerVelocity;
-        private int _frameWidth, _frameHeight;
-        private float _gravity = 800f;
-        private float _jumpPower = 400f;
-        private float _moveSpeed = 200f;
-        private bool _isOnGround = false;
-        private bool _wasJumpPressed = false;
+        private SpriteFont _debugFont;
 
-        // Animation
-        private int _currentFrame = 0;
-        private double _animationTimer = 0;
-        private double _animationInterval = 0.15;
+        private Player _player;
+        private List<Rectangle> _platforms;
 
-        // Debugging 
         private bool _showHitboxes = false;
-        private bool _showCollisionMap = false;
+        private bool _showTimerInfo = false;
         private KeyboardState _previousKeyboardState;
 
-        // Fixed ground level where chracter stands 
-        private const float GROUND_Y = 420f;
-        // Platform rectangles
-        private Rectangle[] _platforms;
+        private string _collisionMethod = "manual";
 
         public Game1()
         {
@@ -47,133 +31,83 @@ namespace fire_and_ice
             IsMouseVisible = true;
         }
 
-        //initialise the game from framework dont delete 
         protected override void Initialize()
         {
+            _collisionTimer = new GlobalTimer();
             base.Initialize();
         }
 
-        //
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Load images
             _levelTexture = Content.Load<Texture2D>("first_level");
-            _heroTexture = Content.Load<Texture2D>("hero_walk");
+            Texture2D heroTexture = Content.Load<Texture2D>("hero_walk");
 
-            // Calculate frame dimensions
-            _frameWidth = _heroTexture.Width / 4;  // 4 frames
-            _frameHeight = _heroTexture.Height;
+            try
+            {
+                _debugFont = Content.Load<SpriteFont>("DebugFont");
+            }
+            catch
+            {
+                _debugFont = null;
+            }
 
-            // Create pixel texture of hitbox and floor level for debug 
             _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
 
-            // Set player starting position DIRECTLY on the ground
-            _playerPosition = new Vector2(100, GROUND_Y - _frameHeight);
-            _playerVelocity = Vector2.Zero;
-            _isOnGround = true;
+            if (_collisionMethod == "manual")
+            {
+                _platforms = LevelPlatforms.GetLevel1Platforms();
+            }
+            else
+            {
+                Texture2D collisionMapTexture;
+                try
+                {
+                    collisionMapTexture = Content.Load<Texture2D>("first_level_collision");
+                }
+                catch
+                {
+                    collisionMapTexture = _levelTexture;
+                }
+                CollisionMapReader collisionReader = new CollisionMapReader(collisionMapTexture);
+                _platforms = collisionReader.ExtractCollisionRectangles();
+            }
 
+            _player = new Player(heroTexture, new Vector2(85, 270));
+
+            System.Diagnostics.Debug.WriteLine($"Loaded {_platforms.Count} platforms");
         }
 
         protected override void Update(GameTime gameTime)
         {
-            KeyboardState currentKeyboardState = Keyboard.GetState();
-            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            KeyboardState keyboardState = Keyboard.GetState();
 
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-                currentKeyboardState.IsKeyDown(Keys.Escape))
+            if (keyboardState.IsKeyDown(Keys.Escape))
                 Exit();
 
-            // Toggle hitboxes with H
-            if (currentKeyboardState.IsKeyDown(Keys.H) && !_previousKeyboardState.IsKeyDown(Keys.H))
-            {
+            if (keyboardState.IsKeyDown(Keys.H) && !_previousKeyboardState.IsKeyDown(Keys.H))
                 _showHitboxes = !_showHitboxes;
-            }
 
-            // HORIZONTAL MOVEMENT
-            float moveX = 0;
-            if (currentKeyboardState.IsKeyDown(Keys.Right) || currentKeyboardState.IsKeyDown(Keys.D))
-                moveX = 1;
-            if (currentKeyboardState.IsKeyDown(Keys.Left) || currentKeyboardState.IsKeyDown(Keys.A))
-                moveX = -1;
+            if (keyboardState.IsKeyDown(Keys.T) && !_previousKeyboardState.IsKeyDown(Keys.T))
+                _showTimerInfo = !_showTimerInfo;
 
-            _playerVelocity.X = moveX * _moveSpeed;
+            _player.ProcessInput(keyboardState);
 
-            // JUMPING
-            bool jumpPressed = currentKeyboardState.IsKeyDown(Keys.Space) ||
-                              currentKeyboardState.IsKeyDown(Keys.Up) ||
-                              currentKeyboardState.IsKeyDown(Keys.W);
-
-            if (jumpPressed && !_wasJumpPressed && _isOnGround)
+            _collisionTimer.Update(gameTime, (fixedDeltaTime) =>
             {
-                _playerVelocity.Y = -_jumpPower;
-                _isOnGround = false;
-            }
-            _wasJumpPressed = jumpPressed;
+                // Detect ground and collisions before physics step
+                _player.CheckCollisions(_platforms);
 
-            // GRAVITY
-            if (!_isOnGround)
-            {
-                _playerVelocity.Y += _gravity * deltaTime;
-                if (_playerVelocity.Y > 1000)
-                    _playerVelocity.Y = 1000; // Terminal velocity
-            }
+                // Then apply movement, gravity, and jump logic
+                _player.UpdatePhysics(fixedDeltaTime, GraphicsDevice.Viewport.Width);
+            });
 
-            // APPLY MOVEMENT
-            _playerPosition.X += _playerVelocity.X * deltaTime;
-            _playerPosition.Y += _playerVelocity.Y * deltaTime;
 
-            // COLLISION WITH GROUND (SIMPLE)
-            float playerBottom = _playerPosition.Y + _frameHeight;
+            _player.UpdateAnimation(gameTime);
 
-            if (playerBottom >= GROUND_Y)
-            {
-                // Hit the ground
-                _playerPosition.Y = GROUND_Y - _frameHeight;
-                _playerVelocity.Y = 0;
-                _isOnGround = true;
-            }
-            else if (playerBottom >= GROUND_Y - 5 && _playerVelocity.Y >= 0)
-            {
-                // Close enough to ground and not jumping
-                _isOnGround = true;
-            }
-            else
-            {
-                // In the air
-                _isOnGround = false;
-            }
-
-            // KEEP PLAYER ON SCREEN
-            _playerPosition.X = MathHelper.Clamp(_playerPosition.X, 0,
-                GraphicsDevice.Viewport.Width - _frameWidth);
-
-            // Prevent going above screen
-            if (_playerPosition.Y < 0)
-            {
-                _playerPosition.Y = 0;
-                _playerVelocity.Y = 0;
-            }
-
-            // ANIMATION
-            if (Math.Abs(_playerVelocity.X) > 0.1f && _isOnGround)
-            {
-                _animationTimer += deltaTime;
-                if (_animationTimer > _animationInterval)
-                {
-                    _currentFrame = (_currentFrame + 1) % 4;
-                    _animationTimer = 0;
-                }
-            }
-            else
-            {
-                _currentFrame = 0;
-                _animationTimer = 0;
-            }
-
-            _previousKeyboardState = currentKeyboardState;
+            _previousKeyboardState = keyboardState;
             base.Update(gameTime);
         }
 
@@ -183,54 +117,34 @@ namespace fire_and_ice
 
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
-            // Draw level background
-            Rectangle levelDestRect = new Rectangle(0, 0,
-                GraphicsDevice.Viewport.Width,
-                GraphicsDevice.Viewport.Height);
-            _spriteBatch.Draw(_levelTexture, levelDestRect, Color.White);
+            _spriteBatch.Draw(_levelTexture,
+                new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height),
+                Color.White);
 
-            // Draw player
-            Rectangle sourceRect = new Rectangle(
-                _currentFrame * _frameWidth, 0,
-                _frameWidth, _frameHeight);
-            _spriteBatch.Draw(_heroTexture, _playerPosition, sourceRect, Color.White);
+            _player.Draw(_spriteBatch);
 
-            // Debug drawing
             if (_showHitboxes)
             {
-                // Player hitbox
-                Rectangle playerRect = new Rectangle(
-                    (int)_playerPosition.X, (int)_playerPosition.Y,
-                    _frameWidth, _frameHeight);
-                _spriteBatch.Draw(_pixelTexture, playerRect, Color.Red * 0.3f);
+                _player.DrawDebug(_spriteBatch, _pixelTexture);
 
-                // Draw all platforms (only if initialized)
-                if (_platforms != null)
+                foreach (Rectangle platform in _platforms)
                 {
-                    foreach (Rectangle platform in _platforms)
-                    {
-                        _spriteBatch.Draw(_pixelTexture, platform, Color.Green * 0.3f);
-                    }
+                    _spriteBatch.Draw(_pixelTexture, platform, Color.Cyan * 0.4f);
                 }
-
-                // Ground line
-                Rectangle groundLine = new Rectangle(
-                    0, (int)GROUND_Y,
-                    GraphicsDevice.Viewport.Width, 2);
-                _spriteBatch.Draw(_pixelTexture, groundLine, Color.Yellow);
             }
 
-            // Show collision map overlay
-            if (_showCollisionMap && _collisionMapTexture != null)
+            if (_showTimerInfo && _debugFont != null)
             {
-                Rectangle collisionMapRect = new Rectangle(0, 0,
-                    GraphicsDevice.Viewport.Width,
-                    GraphicsDevice.Viewport.Height);
-                _spriteBatch.Draw(_collisionMapTexture, collisionMapRect, Color.White * 0.5f);
+                string timerInfo = _collisionTimer.GetDiagnostics();
+                _spriteBatch.DrawString(_debugFont, timerInfo, new Vector2(10, 10), Color.White);
+                _spriteBatch.DrawString(_debugFont, "H: Hitboxes | T: Timer",
+                    new Vector2(10, 30), Color.Yellow);
+                _spriteBatch.DrawString(_debugFont,
+                    $"Offset: X={_player.HitboxOffsetX} Y={_player.HitboxOffsetY}",
+                    new Vector2(10, 50), Color.Cyan);
             }
 
             _spriteBatch.End();
-
             base.Draw(gameTime);
         }
     }
