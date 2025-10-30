@@ -3,13 +3,9 @@ using System;
 
 namespace fire_and_ice
 {
-    /// <summary>
-    /// Global timer that manages fixed timestep updates for physics/collision
-    /// Runs collision checks at a fixed rate of 24 times per second
-    /// </summary>
     public class GlobalTimer
     {
-        // Fixed timestep for collision checks (24 times per second = 1/24 seconds per update)
+        // Fixed timestep for collision checks
         private const double FIXED_TIMESTEP = 1.0 / 24.0; // ~0.04167 seconds
 
         // Accumulator for time between updates
@@ -24,7 +20,6 @@ namespace fire_and_ice
         // Maximum number of fixed updates per frame (prevents spiral of death)
         private const int MAX_FIXED_UPDATES_PER_FRAME = 5;
 
-        /// <summary>
         /// Gets the fixed timestep duration in seconds
         /// </summary>
         public double FixedTimestep => FIXED_TIMESTEP;
@@ -34,20 +29,15 @@ namespace fire_and_ice
         /// </summary>
         public double TotalElapsedTime => _totalElapsedTime;
 
-        /// <summary>
         /// Gets the number of fixed updates that have occurred
-        /// </summary>
         public int FixedUpdateCount => _fixedUpdateCount;
 
-        /// <summary>
         /// Gets how far between fixed updates we currently are (0.0 to 1.0)
         /// Useful for interpolation
         /// </summary>
         public double Alpha => _accumulator / FIXED_TIMESTEP;
 
-        /// <summary>
         /// Update the timer and determine how many fixed timestep updates should occur
-        /// </summary>
         /// <param name="gameTime">The game time from MonoGame's Update method</param>
         /// <param name="onFixedUpdate">Action to call for each fixed timestep update</param>
         public void Update(GameTime gameTime, Action<float> onFixedUpdate)
@@ -84,12 +74,6 @@ namespace fire_and_ice
             }
         }
 
-        /// <summary>
-        /// Simpler update method that returns true when a fixed update should occur
-        /// Call your collision/physics logic when this returns true
-        /// </summary>
-        /// <param name="gameTime">The game time from MonoGame's Update method</param>
-        /// <returns>True if a fixed update should occur this frame</returns>
         public bool ShouldFixedUpdate(GameTime gameTime)
         {
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
@@ -117,100 +101,18 @@ namespace fire_and_ice
         }
 
         /// <summary>
-        /// Get diagnostic information about the timer
+        /// Get diagnostic information about the timer state
         /// </summary>
+        /// <returns>String with timer diagnostics for debugging</returns>
         public string GetDiagnostics()
         {
-            return $"Fixed Updates: {_fixedUpdateCount} | " +
-                   $"Total Time: {_totalElapsedTime:F2}s | " +
-                   $"Accumulator: {_accumulator:F4}s | " +
-                   $"Alpha: {Alpha:F2}";
+            return $"Fixed Timestep: {FIXED_TIMESTEP:F5}s ({1.0 / FIXED_TIMESTEP:F1} FPS)\n" +
+                   $"Accumulator: {_accumulator:F5}s\n" +
+                   $"Alpha: {Alpha:F3}\n" +
+                   $"Fixed Updates: {_fixedUpdateCount}\n" +
+                   $"Total Time: {_totalElapsedTime:F2}s";
         }
+
     }
 
-    /// <summary>
-    /// Extension class to demonstrate usage patterns
-    /// </summary>
-    public static class GlobalTimerExample
-    {
-        /// <summary>
-        /// Example usage pattern 1: Using callback
-        /// </summary>
-        public static void ExampleUsageWithCallback()
-        {
-            /*
-            // In your Game1 class:
-            private GlobalTimer _collisionTimer = new GlobalTimer();
-            
-            protected override void Update(GameTime gameTime)
-            {
-                // Update with callback - collision logic runs at fixed 24 FPS
-                _collisionTimer.Update(gameTime, (fixedDeltaTime) =>
-                {
-                    // This code runs exactly 24 times per second
-                    CheckPlatformCollisions();
-                    UpdatePhysics(fixedDeltaTime);
-                });
-                
-                // Other game logic that runs every frame
-                UpdateAnimation(gameTime);
-                UpdateInput(gameTime);
-            }
-            */
-        }
-
-        /// <summary>
-        /// Example usage pattern 2: Using boolean check
-        /// </summary>
-        public static void ExampleUsageWithBoolean()
-        {
-            /*
-            // In your Game1 class:
-            private GlobalTimer _collisionTimer = new GlobalTimer();
-            
-            protected override void Update(GameTime gameTime)
-            {
-                // Check if we should run collision this frame
-                if (_collisionTimer.ShouldFixedUpdate(gameTime))
-                {
-                    // This code runs exactly 24 times per second
-                    CheckPlatformCollisions();
-                    ApplyGravity();
-                }
-                
-                // Other game logic that runs every frame
-                float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                UpdateAnimation(deltaTime);
-                UpdateInput(deltaTime);
-            }
-            */
-        }
-
-        /// <summary>
-        /// Example usage pattern 3: Multiple updates per frame
-        /// </summary>
-        public static void ExampleUsageMultipleUpdates()
-        {
-            /*
-            // In your Game1 class:
-            private GlobalTimer _collisionTimer = new GlobalTimer();
-            
-            protected override void Update(GameTime gameTime)
-            {
-                // This handles multiple fixed updates per frame automatically
-                // If game runs slow, it will catch up with multiple collision checks
-                _collisionTimer.Update(gameTime, (fixedDeltaTime) =>
-                {
-                    // Apply physics with fixed timestep
-                    _playerVelocity.Y += _gravity * fixedDeltaTime;
-                    _playerPosition += _playerVelocity * fixedDeltaTime;
-                    CheckPlatformCollisions();
-                });
-                
-                // Visual updates can still run every frame
-                UpdateAnimations(gameTime);
-            }
-            */
-        }
-    }
 }

@@ -34,6 +34,21 @@ namespace fire_and_ice
         public int HitboxOffsetX { get; set; } = 10;
         public int HitboxOffsetY { get; set; } = 5;
 
+        // Health system
+        public float Health { get; private set; } = 100f;
+        public float MaxHealth { get; set; } = 100f;
+        public bool IsAlive => Health > 0f;
+        private float _damageCooldown = 0f;
+        private const float DAMAGE_COOLDOWN_TIME = 0.5f; // Half second invincibility after hit
+        public bool IsInvincible => _damageCooldown > 0f;
+
+        // Surface interaction modifiers
+        private float _currentFrictionMultiplier = 1f;
+        private SurfaceType _currentSurfaceType = SurfaceType.Empty;
+        private float _bounceCooldown = 0f;
+        private const float BOUNCE_COOLDOWN_TIME = 0.3f; // Prevent immediate re-bounce
+        private const float MIN_BOUNCE_VELOCITY = 50f; // Minimum falling speed required to trigger bounce
+
         // Movement smoothing / coyote
         private float coyoteTimer = 0f;
         private const float COYOTE_TIME = 0.1f; // 100 ms forgiveness
@@ -103,16 +118,27 @@ namespace fire_and_ice
 
         public void UpdatePhysics(float deltaTime, int screenWidth)
         {
+            // --- DAMAGE COOLDOWN ---
+            if (_damageCooldown > 0f)
+                _damageCooldown -= deltaTime;
+
+            // --- BOUNCE COOLDOWN ---
+            if (_bounceCooldown > 0f)
+                _bounceCooldown -= deltaTime;
+
             // --- COYOTE TIME HANDLING ---
             if (IsOnGround)
                 coyoteTimer = COYOTE_TIME;
             else
                 coyoteTimer -= deltaTime;
 
-            // --- HORIZONTAL MOVEMENT (acceleration / deceleration) ---
+            // --- HORIZONTAL MOVEMENT (acceleration / deceleration with surface friction) ---
+            float effectiveAcceleration = ACCELERATION * _currentFrictionMultiplier;
+            float effectiveDeceleration = DECELERATION * _currentFrictionMultiplier;
+
             if (inputMoveX != 0)
             {
-                velocity.X += inputMoveX * ACCELERATION * deltaTime;
+                velocity.X += inputMoveX * effectiveAcceleration * deltaTime;
                 if (Math.Abs(velocity.X) > MAX_RUN_SPEED)
                     velocity.X = Math.Sign(velocity.X) * MAX_RUN_SPEED;
             }
@@ -120,12 +146,12 @@ namespace fire_and_ice
             {
                 if (velocity.X > 0)
                 {
-                    velocity.X -= DECELERATION * deltaTime;
+                    velocity.X -= effectiveDeceleration * deltaTime;
                     if (velocity.X < 0) velocity.X = 0;
                 }
                 else if (velocity.X < 0)
                 {
-                    velocity.X += DECELERATION * deltaTime;
+                    velocity.X += effectiveDeceleration * deltaTime;
                     if (velocity.X > 0) velocity.X = 0;
                 }
             }
@@ -137,6 +163,7 @@ namespace fire_and_ice
                 IsOnGround = false;
                 coyoteTimer = 0f;
                 inputJump = false;
+                System.Diagnostics.Debug.WriteLine($"JUMP! Position: {position.Y:F2}, Velocity: {velocity.Y:F2}");
             }
 
             // --- GRAVITY ---
@@ -153,71 +180,226 @@ namespace fire_and_ice
             // Clamp horizontally inside screen
             position.X = MathHelper.Clamp(position.X, 0, screenWidth - frameWidth);
 
-            // Snap to pixel grid to reduce subpixel jitter
-            position.Y = (float)Math.Round(position.Y, 2);
-
             // Update movement flag for animation
             isMoving = (Math.Abs(velocity.X) > 1f) && IsOnGround;
         }
 
-        public void CheckCollisions(List<Rectangle> platforms)
+        public void CheckCollisions(List<InteractableObject> objects)
         {
-            // We'll assume false and set true when we land
             IsOnGround = false;
+            _currentFrictionMultiplier = 1f;
+            _currentSurfaceType = SurfaceType.Empty;
 
             Rectangle hitbox = GetHitbox();
             Vector2 correction = Vector2.Zero;
+            bool shouldBounce = false;
+            float bounceForce = 0f;
 
-            foreach (Rectangle platform in platforms)
+            foreach (InteractableObject obj in objects)
             {
-                if (hitbox.Intersects(platform))
+                if (hitbox.Intersects(obj.Bounds))
                 {
-                    float overlapLeft = hitbox.Right - platform.Left;
-                    float overlapRight = platform.Right - hitbox.Left;
-                    float overlapTop = hitbox.Bottom - platform.Top;
-                    float overlapBottom = platform.Bottom - hitbox.Top;
-                    float minOverlap = Math.Min(Math.Min(overlapLeft, overlapRight),
-                                                Math.Min(overlapTop, overlapBottom));
+                    // Calculate interaction result based on object type
+                    InteractionResult interaction = CalculateInteraction(obj);
 
-                    if (minOverlap == overlapTop && velocity.Y >= 0)
+                    // Handle damage if applicable
+                    if (interaction.DamageTaken > 0f && !IsInvincible)
                     {
-                        // Landed on platform
-                        correction.Y = -overlapTop;
-                        velocity.Y = 0;
-                        IsOnGround = true;
-                    }
-                    else if (minOverlap == overlapBottom && velocity.Y < 0)
-                    {
-                        // Hit ceiling
-                        correction.Y = overlapBottom;
-                        velocity.Y = 0;
-                    }
-                    else if (minOverlap == overlapLeft && velocity.X > 0)
-                    {
-                        // Hit right side
-                        correction.X = -overlapLeft;
-                        velocity.X = 0;
-                    }
-                    else if (minOverlap == overlapRight && velocity.X < 0)
-                    {
-                        // Hit left side
-                        correction.X = overlapRight;
-                        velocity.X = 0;
+                        TakeDamage(interaction.DamageTaken);
                     }
 
-                    // Apply correction immediately and refresh hitbox for stacked collisions
-                    position += correction;
-                    hitbox = GetHitbox();
-                    correction = Vector2.Zero;
+                    // Apply velocity modifiers (but NOT bounce yet)
+                    velocity += interaction.VelocityModifier;
+
+                    // Only apply collision if specified
+                    if (interaction.ShouldApplyCollision)
+                    {
+                        float overlapLeft = hitbox.Right - obj.Bounds.Left;
+                        float overlapRight = obj.Bounds.Right - hitbox.Left;
+                        float overlapTop = hitbox.Bottom - obj.Bounds.Top;
+                        float overlapBottom = obj.Bounds.Bottom - hitbox.Top;
+                        float minOverlap = Math.Min(Math.Min(overlapLeft, overlapRight),
+                                                    Math.Min(overlapTop, overlapBottom));
+
+                        if (minOverlap == overlapTop && velocity.Y >= 0)
+                        {
+                            // Store the landing velocity before zeroing it
+                            float landingVelocity = velocity.Y;
+
+                            // Landed on platform
+                            correction.Y = -overlapTop;
+                            velocity.Y = 0;
+                            IsOnGround = true;
+                            _currentSurfaceType = obj.Type;
+                            _currentFrictionMultiplier = interaction.FrictionMultiplier;
+
+                            // Check if we should bounce (apply AFTER collision resolution)
+                            // Only bounce if: 1) cooldown expired, 2) was actually falling with sufficient speed
+                            if (interaction.BounceForce > 0f &&
+                                _bounceCooldown <= 0f &&
+                                landingVelocity >= MIN_BOUNCE_VELOCITY)
+                            {
+                                shouldBounce = true;
+                                bounceForce = interaction.BounceForce;
+                            }
+                        }
+                        else if (minOverlap == overlapBottom && velocity.Y < 0 && !obj.IsOneWay)
+                        {
+                            // Hit ceiling (not for one-way platforms)
+                            correction.Y = overlapBottom;
+                            velocity.Y = 0;
+                        }
+                        else if (minOverlap == overlapLeft && velocity.X > 0)
+                        {
+                            // Hit right side
+                            correction.X = -overlapLeft;
+                            velocity.X = 0;
+                        }
+                        else if (minOverlap == overlapRight && velocity.X < 0)
+                        {
+                            // Hit left side
+                            correction.X = overlapRight;
+                            velocity.X = 0;
+                        }
+
+                        // Apply correction immediately and refresh hitbox for stacked collisions
+                        position += correction;
+                        hitbox = GetHitbox();
+                        correction = Vector2.Zero;
+                    }
                 }
+            }
+
+            // Apply bounce force AFTER all collision resolution
+            if (shouldBounce)
+            {
+                velocity.Y = -bounceForce;
+                IsOnGround = false; // Player is launching, not on ground anymore
+                _bounceCooldown = BOUNCE_COOLDOWN_TIME; // Set cooldown to prevent immediate re-bounce
             }
 
             // Ground stabilization: prevent micro-shaking
             if (IsOnGround)
             {
                 velocity.Y = 0;
-                position.Y = (float)Math.Round(position.Y + 0.5f);
+                position.Y = (float)Math.Round(position.Y);
             }
+        }
+
+        /// <summary>
+        /// Calculate interaction effects based on object type
+        /// </summary>
+        private InteractionResult CalculateInteraction(InteractableObject obj)
+        {
+            switch (obj.Type)
+            {
+                case SurfaceType.Solid:
+                    return InteractionResult.Normal;
+
+                case SurfaceType.Platform:
+                    return InteractionResult.Normal;
+
+                case SurfaceType.Ice:
+                    return new InteractionResult
+                    {
+                        ShouldApplyCollision = true,
+                        DamageTaken = 0f,
+                        VelocityModifier = Vector2.Zero,
+                        FrictionMultiplier = 0.2f, // Very slippery
+                        BounceForce = 0f
+                    };
+
+                case SurfaceType.Sticky:
+                    return new InteractionResult
+                    {
+                        ShouldApplyCollision = true,
+                        DamageTaken = 0f,
+                        VelocityModifier = Vector2.Zero,
+                        FrictionMultiplier = 3f, // Hard to move
+                        BounceForce = 0f
+                    };
+
+                case SurfaceType.Bouncy:
+                    return new InteractionResult
+                    {
+                        ShouldApplyCollision = true,
+                        DamageTaken = 0f,
+                        VelocityModifier = Vector2.Zero,
+                        FrictionMultiplier = 1f,
+                        BounceForce = 500f // Bounce up
+                    };
+
+                case SurfaceType.Fire:
+                case SurfaceType.Lava:
+                    return new InteractionResult
+                    {
+                        ShouldApplyCollision = false, // Can walk through
+                        DamageTaken = obj.DamageAmount > 0 ? obj.DamageAmount : 10f,
+                        VelocityModifier = Vector2.Zero,
+                        FrictionMultiplier = 1f,
+                        BounceForce = 0f
+                    };
+
+                case SurfaceType.Spike:
+                case SurfaceType.Hazard:
+                    return new InteractionResult
+                    {
+                        ShouldApplyCollision = false,
+                        DamageTaken = obj.DamageAmount > 0 ? obj.DamageAmount : 25f,
+                        VelocityModifier = Vector2.Zero,
+                        FrictionMultiplier = 1f,
+                        BounceForce = 0f
+                    };
+
+                case SurfaceType.Water:
+                    return new InteractionResult
+                    {
+                        ShouldApplyCollision = false,
+                        DamageTaken = 0f,
+                        VelocityModifier = new Vector2(velocity.X * -0.5f, velocity.Y * -0.3f), // Slow down
+                        FrictionMultiplier = 0.5f,
+                        BounceForce = 0f
+                    };
+
+                default:
+                    return InteractionResult.None;
+            }
+        }
+
+        /// <summary>
+        /// Apply damage to player
+        /// </summary>
+        public void TakeDamage(float amount)
+        {
+            if (IsInvincible || !IsAlive)
+                return;
+
+            Health -= amount;
+            if (Health < 0f)
+                Health = 0f;
+
+            _damageCooldown = DAMAGE_COOLDOWN_TIME;
+
+            System.Diagnostics.Debug.WriteLine($"Player took {amount} damage! Health: {Health}/{MaxHealth}");
+        }
+
+        /// <summary>
+        /// Heal player
+        /// </summary>
+        public void Heal(float amount)
+        {
+            Health += amount;
+            if (Health > MaxHealth)
+                Health = MaxHealth;
+        }
+
+        /// <summary>
+        /// Reset player health
+        /// </summary>
+        public void ResetHealth()
+        {
+            Health = MaxHealth;
+            _damageCooldown = 0f;
         }
 
         public void UpdateAnimation(GameTime gameTime)
@@ -244,8 +426,15 @@ namespace fire_and_ice
         {
             Rectangle sourceRect = new Rectangle(currentFrame * frameWidth, 0, frameWidth, frameHeight);
             Vector2 drawPos = new Vector2((float)Math.Round(position.X), (float)Math.Round(position.Y));
-            spriteBatch.Draw(texture, drawPos, sourceRect, Color.White);
 
+            // Flash red when taking damage
+            Color drawColor = IsInvincible ? Color.Red : Color.White;
+
+            // Flash effect - alternate visibility when invincible
+            if (IsInvincible && ((int)(_damageCooldown * 20) % 2 == 0))
+                drawColor = Color.White * 0.5f;
+
+            spriteBatch.Draw(texture, drawPos, sourceRect, drawColor);
         }
 
         public void DrawDebug(SpriteBatch spriteBatch, Texture2D pixel)

@@ -39,10 +39,10 @@ namespace fire_and_ice
             return pixel.G > 200 && pixel.R < COLOR_TOLERANCE && pixel.B < COLOR_TOLERANCE;
         }
 
-        // Extract all collision rectangles from the map
-        public List<Rectangle> ExtractCollisionRectangles()
+        // Extract all collision rectangles from the map as InteractableObjects
+        public List<InteractableObject> ExtractCollisionRectangles()
         {
-            List<Rectangle> platforms = new List<Rectangle>();
+            List<InteractableObject> platforms = new List<InteractableObject>();
             bool[,] processed = new bool[_width, _height];
 
             // Scan the entire image for green pixels
@@ -56,7 +56,8 @@ namespace fire_and_ice
                         Rectangle platform = ExtractPlatformBounds(x, y, processed);
                         if (platform.Width > 5 && platform.Height > 5) // Ignore tiny platforms
                         {
-                            platforms.Add(platform);
+                            // Default to Solid type for image-based collision
+                            platforms.Add(new InteractableObject(platform, SurfaceType.Solid));
                         }
                     }
                 }
