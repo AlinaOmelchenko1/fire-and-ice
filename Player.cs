@@ -17,6 +17,9 @@ namespace fire_and_ice
         private double animationTimer;
         private double animationInterval = 0.15;
 
+        // Player color
+        public Color PlayerColor { get; set; } = Color.White;
+
         // Position / physics
         private Vector2 position;
         private Vector2 velocity;
@@ -25,6 +28,13 @@ namespace fire_and_ice
         private bool wasJumpPressed;
         private float inputMoveX;
         private bool inputJump;
+
+        // Control keys (configurable)
+        public Keys MoveLeftKey { get; set; } = Keys.A;
+        public Keys MoveRightKey { get; set; } = Keys.D;
+        public Keys JumpKey1 { get; set; } = Keys.Space;
+        public Keys JumpKey2 { get; set; } = Keys.W;
+        public Keys JumpKey3 { get; set; } = Keys.Up;
 
         // Public tunables
         public float Gravity { get; set; } = 800f;
@@ -98,14 +108,14 @@ namespace fire_and_ice
         public void ProcessInput(KeyboardState keyboardState)
         {
             inputMoveX = 0;
-            if (keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D))
+            if (keyboardState.IsKeyDown(MoveRightKey))
                 inputMoveX = 1;
-            if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A))
+            if (keyboardState.IsKeyDown(MoveLeftKey))
                 inputMoveX = -1;
 
-            bool jumpPressed = keyboardState.IsKeyDown(Keys.Space) ||
-                              keyboardState.IsKeyDown(Keys.Up) ||
-                              keyboardState.IsKeyDown(Keys.W);
+            bool jumpPressed = keyboardState.IsKeyDown(JumpKey1) ||
+                              keyboardState.IsKeyDown(JumpKey2) ||
+                              keyboardState.IsKeyDown(JumpKey3);
 
             // edge-trigger jump detection
             if (jumpPressed && !wasJumpPressed)
@@ -427,12 +437,12 @@ namespace fire_and_ice
             Rectangle sourceRect = new Rectangle(currentFrame * frameWidth, 0, frameWidth, frameHeight);
             Vector2 drawPos = new Vector2((float)Math.Round(position.X), (float)Math.Round(position.Y));
 
-            // Flash red when taking damage
-            Color drawColor = IsInvincible ? Color.Red : Color.White;
+            // Flash red when taking damage, otherwise use player color
+            Color drawColor = IsInvincible ? Color.Red : PlayerColor;
 
             // Flash effect - alternate visibility when invincible
             if (IsInvincible && ((int)(_damageCooldown * 20) % 2 == 0))
-                drawColor = Color.White * 0.5f;
+                drawColor = PlayerColor * 0.5f;
 
             spriteBatch.Draw(texture, drawPos, sourceRect, drawColor);
         }
