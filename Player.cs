@@ -173,7 +173,6 @@ namespace fire_and_ice
                 IsOnGround = false;
                 coyoteTimer = 0f;
                 inputJump = false;
-                System.Diagnostics.Debug.WriteLine($"JUMP! Position: {position.Y:F2}, Velocity: {velocity.Y:F2}");
             }
 
             // --- GRAVITY ---
@@ -410,6 +409,24 @@ namespace fire_and_ice
         {
             Health = MaxHealth;
             _damageCooldown = 0f;
+        }
+
+        /// <summary>
+        /// Reset all player state (position, velocity, health)
+        /// </summary>
+        public void Reset(Vector2 spawnPosition)
+        {
+            position = spawnPosition;
+            velocity = Vector2.Zero;
+            Health = MaxHealth;
+            _damageCooldown = 0f;
+            _bounceCooldown = 0f;
+            coyoteTimer = 0f;
+            IsOnGround = false;
+            inputJump = false;
+            wasJumpPressed = false;
+            currentFrame = 0;
+            animationTimer = 0;
         }
 
         public void UpdateAnimation(GameTime gameTime)

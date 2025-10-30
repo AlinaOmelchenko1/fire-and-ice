@@ -34,3 +34,4 @@ C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\refint\fire and ic
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.pdb
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\fire and ice.genruntimeconfig.cache
 C:\Users\Rostyslav\source\repos\fire and ice\obj\Debug\net8.0\ref\fire and ice.dll
+C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\Content\DebugFont.xnb

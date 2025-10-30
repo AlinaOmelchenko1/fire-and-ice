@@ -7,8 +7,10 @@
     <File>C:/Users/Rostyslav/source/repos/fire and ice/Content/first_level_collision.png</File>
     <File>C:/Users/Rostyslav/source/repos/fire and ice/Content/first_level.png</File>
     <File>C:/Users/Rostyslav/source/repos/fire and ice/Content/hero_walk.png</File>
+    <File>C:/Users/Rostyslav/source/repos/fire and ice/Content/DebugFont.spritefont</File>
   </SourceFiles>
   <DestFiles>
+    <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
     <File xsi:nil="true" />
