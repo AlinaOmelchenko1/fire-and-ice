@@ -41,6 +41,9 @@ namespace fire_and_ice
         private Door _door2; // Right door
         private bool _doorsOpening = false;
 
+        // Flames
+        private List<Flame> _flames;
+
         private bool _showHitboxes = false;
         private bool _showTimerInfo = false;
         private KeyboardState _previousKeyboardState;
@@ -126,7 +129,18 @@ namespace fire_and_ice
             _door1 = new Door(new Vector2(5, 65)); // Top left corner door (moved up 30px, left 5px)
             _door2 = new Door(new Vector2(737, 65)); // Top right corner door (moved up 30px, left 5px)
 
+            // Initialize flames for all fire hazards
+            _flames = new List<Flame>();
+            foreach (var platform in _platforms)
+            {
+                if (platform.Type == SurfaceType.Fire)
+                {
+                    _flames.Add(new Flame(platform.Bounds));
+                }
+            }
+
             System.Diagnostics.Debug.WriteLine($"Loaded {_platforms.Count} platforms");
+            System.Diagnostics.Debug.WriteLine($"Created {_flames.Count} animated flames");
         }
 
         protected override void Update(GameTime gameTime)
@@ -242,6 +256,12 @@ namespace fire_and_ice
             _door1.Update(gameTime);
             _door2.Update(gameTime);
 
+            // Update flames
+            foreach (var flame in _flames)
+            {
+                flame.Update(gameTime);
+            }
+
             // Check for game over
             if (!_player.IsAlive || !_player2.IsAlive)
             {
@@ -287,6 +307,16 @@ namespace fire_and_ice
             _door1.Reset();
             _door2.Reset();
             _doorsOpening = false;
+
+            // Reset flames
+            _flames.Clear();
+            foreach (var platform in _platforms)
+            {
+                if (platform.Type == SurfaceType.Fire)
+                {
+                    _flames.Add(new Flame(platform.Bounds));
+                }
+            }
 
             // Reset game state
             _currentState = GameState.Playing;
@@ -334,6 +364,12 @@ namespace fire_and_ice
             // Draw doors first (behind players)
             _door1.Draw(_spriteBatch, _pixelTexture);
             _door2.Draw(_spriteBatch, _pixelTexture);
+
+            // Draw animated flames
+            foreach (var flame in _flames)
+            {
+                flame.Draw(_spriteBatch, _pixelTexture);
+            }
 
             // Draw keys
             _key1.Draw(_spriteBatch, _pixelTexture);

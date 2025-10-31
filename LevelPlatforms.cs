@@ -66,11 +66,11 @@ namespace fire_and_ice
                 damageAmount: 5f  // 5 damage per hit
             ));
 
-            // SPIKE HAZARD - on center platform
+            // FIRE HAZARD - on center platform (animated flame)
             platforms.Add(new InteractableObject(
                 new Rectangle(470, 240, 30, 20),
-                SurfaceType.Spike,
-                damageAmount: 20f  // 20 damage per hit
+                SurfaceType.Fire,
+                damageAmount: 10f  // 10 damage per hit
             ));
 
             return platforms;
