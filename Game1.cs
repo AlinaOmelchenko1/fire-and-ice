@@ -34,6 +34,13 @@ namespace fire_and_ice
         private Player _player2; // Second player (blue)
         private List<InteractableObject> _platforms;
 
+        // Keys and Doors
+        private Key _key1; // For player 1
+        private Key _key2; // For player 2
+        private Door _door1; // Left door
+        private Door _door2; // Right door
+        private bool _doorsOpening = false;
+
         private bool _showHitboxes = false;
         private bool _showTimerInfo = false;
         private KeyboardState _previousKeyboardState;
@@ -111,6 +118,14 @@ namespace fire_and_ice
             _player2.JumpKey2 = Keys.RightControl;
             _player2.JumpKey3 = Keys.RightShift;
 
+            // Initialize keys - spawn at specific locations
+            _key1 = new Key(new Vector2(65, 315)); // Left upper corner of left wooden crate
+            _key2 = new Key(new Vector2(625, 305)); // On right wooden crate
+
+            // Initialize doors at top of map (matching green rectangles)
+            _door1 = new Door(new Vector2(5, 65)); // Top left corner door (moved up 30px, left 5px)
+            _door2 = new Door(new Vector2(737, 65)); // Top right corner door (moved up 30px, left 5px)
+
             System.Diagnostics.Debug.WriteLine($"Loaded {_platforms.Count} platforms");
         }
 
@@ -171,6 +186,62 @@ namespace fire_and_ice
             _player.UpdateAnimation(gameTime);
             _player2.UpdateAnimation(gameTime);
 
+            // Update keys
+            _key1.Update(gameTime);
+            _key2.Update(gameTime);
+
+            // Check for key collection
+            if (!_key1.IsCollected)
+            {
+                Rectangle playerHitbox = _player.GetHitbox();
+                Rectangle player2Hitbox = _player2.GetHitbox();
+
+                if (playerHitbox.Intersects(_key1.GetBounds()))
+                {
+                    _key1.IsCollected = true;
+                    _key1.PlayerOwner = 1;
+                    System.Diagnostics.Debug.WriteLine("Player 1 collected key!");
+                }
+                else if (player2Hitbox.Intersects(_key1.GetBounds()))
+                {
+                    _key1.IsCollected = true;
+                    _key1.PlayerOwner = 2;
+                    System.Diagnostics.Debug.WriteLine("Player 2 collected key 1!");
+                }
+            }
+
+            if (!_key2.IsCollected)
+            {
+                Rectangle playerHitbox = _player.GetHitbox();
+                Rectangle player2Hitbox = _player2.GetHitbox();
+
+                if (playerHitbox.Intersects(_key2.GetBounds()))
+                {
+                    _key2.IsCollected = true;
+                    _key2.PlayerOwner = 1;
+                    System.Diagnostics.Debug.WriteLine("Player 1 collected key 2!");
+                }
+                else if (player2Hitbox.Intersects(_key2.GetBounds()))
+                {
+                    _key2.IsCollected = true;
+                    _key2.PlayerOwner = 2;
+                    System.Diagnostics.Debug.WriteLine("Player 2 collected key!");
+                }
+            }
+
+            // Open doors when both keys are collected
+            if (_key1.IsCollected && _key2.IsCollected && !_doorsOpening)
+            {
+                _doorsOpening = true;
+                _door1.StartOpening();
+                _door2.StartOpening();
+                System.Diagnostics.Debug.WriteLine("Both keys collected - opening doors!");
+            }
+
+            // Update doors
+            _door1.Update(gameTime);
+            _door2.Update(gameTime);
+
             // Check for game over
             if (!_player.IsAlive || !_player2.IsAlive)
             {
@@ -209,6 +280,13 @@ namespace fire_and_ice
             _player2.Reset(new Vector2(700, 270));
 
             System.Diagnostics.Debug.WriteLine($"Players reset - P1: {_player.Health}HP, P2: {_player2.Health}HP");
+
+            // Reset keys and doors
+            _key1 = new Key(new Vector2(65, 315)); // Left upper corner of left wooden crate
+            _key2 = new Key(new Vector2(625, 305)); // On right wooden crate
+            _door1.Reset();
+            _door2.Reset();
+            _doorsOpening = false;
 
             // Reset game state
             _currentState = GameState.Playing;
@@ -253,6 +331,14 @@ namespace fire_and_ice
                 new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height),
                 Color.White);
 
+            // Draw doors first (behind players)
+            _door1.Draw(_spriteBatch, _pixelTexture);
+            _door2.Draw(_spriteBatch, _pixelTexture);
+
+            // Draw keys
+            _key1.Draw(_spriteBatch, _pixelTexture);
+            _key2.Draw(_spriteBatch, _pixelTexture);
+
             _player.Draw(_spriteBatch);
             _player2.Draw(_spriteBatch);
 
@@ -295,6 +381,13 @@ namespace fire_and_ice
                     Color.White);
             }
 
+            // Draw key icon for Player 1 if they have collected a key
+            if ((_key1.IsCollected && _key1.PlayerOwner == 1) || (_key2.IsCollected && _key2.PlayerOwner == 1))
+            {
+                Vector2 keyIconPos = new Vector2(healthBarX1 - 30, healthBarY1);
+                _key1.DrawIcon(_spriteBatch, _pixelTexture, keyIconPos);
+            }
+
             // Health bar - Player 2 (Blue)
             int healthBarX2 = GraphicsDevice.Viewport.Width - healthBarWidth - 10;
             int healthBarY2 = 35;
@@ -319,6 +412,13 @@ namespace fire_and_ice
                 _spriteBatch.DrawString(_debugFont, healthText2,
                     new Vector2(healthBarX2 + healthBarWidth/2 - textSize2.X/2, healthBarY2 + 2),
                     Color.Cyan);
+            }
+
+            // Draw key icon for Player 2 if they have collected a key
+            if ((_key1.IsCollected && _key1.PlayerOwner == 2) || (_key2.IsCollected && _key2.PlayerOwner == 2))
+            {
+                Vector2 keyIconPos = new Vector2(healthBarX2 - 30, healthBarY2);
+                _key2.DrawIcon(_spriteBatch, _pixelTexture, keyIconPos);
             }
 
             // Controls display (always shown)
