@@ -205,43 +205,8 @@ namespace fire_and_ice
             _key2.Update(gameTime);
 
             // Check for key collection
-            if (!_key1.IsCollected)
-            {
-                Rectangle playerHitbox = _player.GetHitbox();
-                Rectangle player2Hitbox = _player2.GetHitbox();
-
-                if (playerHitbox.Intersects(_key1.GetBounds()))
-                {
-                    _key1.IsCollected = true;
-                    _key1.PlayerOwner = 1;
-                    System.Diagnostics.Debug.WriteLine("Player 1 collected key!");
-                }
-                else if (player2Hitbox.Intersects(_key1.GetBounds()))
-                {
-                    _key1.IsCollected = true;
-                    _key1.PlayerOwner = 2;
-                    System.Diagnostics.Debug.WriteLine("Player 2 collected key 1!");
-                }
-            }
-
-            if (!_key2.IsCollected)
-            {
-                Rectangle playerHitbox = _player.GetHitbox();
-                Rectangle player2Hitbox = _player2.GetHitbox();
-
-                if (playerHitbox.Intersects(_key2.GetBounds()))
-                {
-                    _key2.IsCollected = true;
-                    _key2.PlayerOwner = 1;
-                    System.Diagnostics.Debug.WriteLine("Player 1 collected key 2!");
-                }
-                else if (player2Hitbox.Intersects(_key2.GetBounds()))
-                {
-                    _key2.IsCollected = true;
-                    _key2.PlayerOwner = 2;
-                    System.Diagnostics.Debug.WriteLine("Player 2 collected key!");
-                }
-            }
+            CheckKeyCollection(_key1, 1);
+            CheckKeyCollection(_key2, 2);
 
             // Open doors when both keys are collected
             if (_key1.IsCollected && _key2.IsCollected && !_doorsOpening)
@@ -325,6 +290,71 @@ namespace fire_and_ice
             System.Diagnostics.Debug.WriteLine("Game state set to Playing");
         }
 
+        private void CheckKeyCollection(Key key, int keyNumber)
+        {
+            if (key.IsCollected)
+                return;
+
+            Rectangle player1Hitbox = _player.GetHitbox();
+            Rectangle player2Hitbox = _player2.GetHitbox();
+
+            if (player1Hitbox.Intersects(key.GetBounds()))
+            {
+                key.IsCollected = true;
+                key.PlayerOwner = 1;
+                System.Diagnostics.Debug.WriteLine($"Player 1 collected key {keyNumber}!");
+            }
+            else if (player2Hitbox.Intersects(key.GetBounds()))
+            {
+                key.IsCollected = true;
+                key.PlayerOwner = 2;
+                System.Diagnostics.Debug.WriteLine($"Player 2 collected key {keyNumber}!");
+            }
+        }
+
+        private void DrawHealthBar(Player player, string label, Color textColor, int yPosition)
+        {
+            const int HEALTH_BAR_WIDTH = 150;
+            const int HEALTH_BAR_HEIGHT = 20;
+            int healthBarX = GraphicsDevice.Viewport.Width - HEALTH_BAR_WIDTH - 10;
+            int healthBarY = yPosition;
+
+            // Draw background (max health)
+            _spriteBatch.Draw(_pixelTexture,
+                new Rectangle(healthBarX, healthBarY, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT),
+                Color.DarkRed * 0.7f);
+
+            // Draw current health
+            int currentHealthWidth = (int)(HEALTH_BAR_WIDTH * (player.Health / player.MaxHealth));
+            Color healthColor = player.Health > 50 ? Color.Green :
+                               (player.Health > 25 ? Color.Yellow : Color.Red);
+            _spriteBatch.Draw(_pixelTexture,
+                new Rectangle(healthBarX, healthBarY, currentHealthWidth, HEALTH_BAR_HEIGHT),
+                healthColor);
+
+            // Draw health text
+            if (_debugFont != null)
+            {
+                string healthText = $"{label}: {player.Health:F0}/{player.MaxHealth:F0}";
+                Vector2 textSize = _debugFont.MeasureString(healthText);
+                _spriteBatch.DrawString(_debugFont, healthText,
+                    new Vector2(healthBarX + HEALTH_BAR_WIDTH / 2 - textSize.X / 2, healthBarY + 2),
+                    textColor);
+            }
+        }
+
+        private void DrawPlayerKeyIcon(int playerNumber, int yPosition)
+        {
+            if ((_key1.IsCollected && _key1.PlayerOwner == playerNumber) ||
+                (_key2.IsCollected && _key2.PlayerOwner == playerNumber))
+            {
+                const int HEALTH_BAR_WIDTH = 150;
+                int healthBarX = GraphicsDevice.Viewport.Width - HEALTH_BAR_WIDTH - 10;
+                Vector2 keyIconPos = new Vector2(healthBarX - 30, yPosition);
+                _key1.DrawIcon(_spriteBatch, _pixelTexture, keyIconPos);
+            }
+        }
+
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
@@ -389,73 +419,12 @@ namespace fire_and_ice
                 }
             }
 
-            // Health bar - Player 1 (White)
-            int healthBarWidth = 150;
-            int healthBarHeight = 20;
-            int healthBarX1 = GraphicsDevice.Viewport.Width - healthBarWidth - 10;
-            int healthBarY1 = 10;
+            // Draw health bars and key icons
+            DrawHealthBar(_player, "P1", Color.White, 10);
+            DrawPlayerKeyIcon(1, 10);
 
-            // Background (max health)
-            _spriteBatch.Draw(_pixelTexture,
-                new Rectangle(healthBarX1, healthBarY1, healthBarWidth, healthBarHeight),
-                Color.DarkRed * 0.7f);
-
-            // Current health
-            int currentHealthWidth1 = (int)(healthBarWidth * (_player.Health / _player.MaxHealth));
-            Color healthColor1 = _player.Health > 50 ? Color.Green : (_player.Health > 25 ? Color.Yellow : Color.Red);
-            _spriteBatch.Draw(_pixelTexture,
-                new Rectangle(healthBarX1, healthBarY1, currentHealthWidth1, healthBarHeight),
-                healthColor1);
-
-            // Health text
-            if (_debugFont != null)
-            {
-                string healthText = $"P1: {_player.Health:F0}/{_player.MaxHealth:F0}";
-                Vector2 textSize = _debugFont.MeasureString(healthText);
-                _spriteBatch.DrawString(_debugFont, healthText,
-                    new Vector2(healthBarX1 + healthBarWidth/2 - textSize.X/2, healthBarY1 + 2),
-                    Color.White);
-            }
-
-            // Draw key icon for Player 1 if they have collected a key
-            if ((_key1.IsCollected && _key1.PlayerOwner == 1) || (_key2.IsCollected && _key2.PlayerOwner == 1))
-            {
-                Vector2 keyIconPos = new Vector2(healthBarX1 - 30, healthBarY1);
-                _key1.DrawIcon(_spriteBatch, _pixelTexture, keyIconPos);
-            }
-
-            // Health bar - Player 2 (Blue)
-            int healthBarX2 = GraphicsDevice.Viewport.Width - healthBarWidth - 10;
-            int healthBarY2 = 35;
-
-            // Background (max health)
-            _spriteBatch.Draw(_pixelTexture,
-                new Rectangle(healthBarX2, healthBarY2, healthBarWidth, healthBarHeight),
-                Color.DarkRed * 0.7f);
-
-            // Current health
-            int currentHealthWidth2 = (int)(healthBarWidth * (_player2.Health / _player2.MaxHealth));
-            Color healthColor2 = _player2.Health > 50 ? Color.Green : (_player2.Health > 25 ? Color.Yellow : Color.Red);
-            _spriteBatch.Draw(_pixelTexture,
-                new Rectangle(healthBarX2, healthBarY2, currentHealthWidth2, healthBarHeight),
-                healthColor2);
-
-            // Health text
-            if (_debugFont != null)
-            {
-                string healthText2 = $"P2: {_player2.Health:F0}/{_player2.MaxHealth:F0}";
-                Vector2 textSize2 = _debugFont.MeasureString(healthText2);
-                _spriteBatch.DrawString(_debugFont, healthText2,
-                    new Vector2(healthBarX2 + healthBarWidth/2 - textSize2.X/2, healthBarY2 + 2),
-                    Color.Cyan);
-            }
-
-            // Draw key icon for Player 2 if they have collected a key
-            if ((_key1.IsCollected && _key1.PlayerOwner == 2) || (_key2.IsCollected && _key2.PlayerOwner == 2))
-            {
-                Vector2 keyIconPos = new Vector2(healthBarX2 - 30, healthBarY2);
-                _key2.DrawIcon(_spriteBatch, _pixelTexture, keyIconPos);
-            }
+            DrawHealthBar(_player2, "P2", Color.Cyan, 35);
+            DrawPlayerKeyIcon(2, 35);
 
             // Controls display (always shown)
             if (_debugFont != null)
