@@ -22,13 +22,22 @@ namespace fire_and_ice
         private GlobalTimer _collisionTimer;
 
         // Game State
-        private GameState _currentState = GameState.Playing;
+        private GameState _currentState = GameState.MainMenu;
         private float _gameOverTimer = 0f;
         private const float GAME_OVER_DELAY = 2f; // Show game over for 2 seconds before allowing restart
 
         private Texture2D _levelTexture;
+        private Texture2D _startPageTexture;
         private Texture2D _pixelTexture;
         private SpriteFont _debugFont;
+
+        // Main Menu State
+        private int _selectedMenuOption = 0; // 0 = Start, 1 = Exit
+        private const int MENU_OPTIONS_COUNT = 2;
+
+        // Pause Menu State
+        private int _selectedPauseOption = 0; // 0 = Resume, 1 = Exit
+        private const int PAUSE_OPTIONS_COUNT = 2;
 
         private Player _player;
         private Player _player2; // Second player (blue)
@@ -68,6 +77,7 @@ namespace fire_and_ice
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             _levelTexture = Content.Load<Texture2D>("first_level");
+            _startPageTexture = Content.Load<Texture2D>("start_page");
             Texture2D heroTexture = Content.Load<Texture2D>("hero_walk");
 
             try
@@ -147,10 +157,6 @@ namespace fire_and_ice
         {
             KeyboardState keyboardState = Keyboard.GetState();
 
-            // Only allow exit in playing state, not in game over
-            if (keyboardState.IsKeyDown(Keys.Escape) && _currentState == GameState.Playing)
-                Exit();
-
             // State machine update
             switch (_currentState)
             {
@@ -163,11 +169,11 @@ namespace fire_and_ice
                     break;
 
                 case GameState.MainMenu:
-                    // Future: Implement main menu
+                    UpdateMainMenu(gameTime, keyboardState);
                     break;
 
                 case GameState.Paused:
-                    // Future: Implement pause
+                    UpdatePaused(gameTime, keyboardState);
                     break;
             }
 
@@ -177,6 +183,15 @@ namespace fire_and_ice
 
         private void UpdatePlaying(GameTime gameTime, KeyboardState keyboardState)
         {
+            // Handle pause
+            if (keyboardState.IsKeyDown(Keys.Escape) && !_previousKeyboardState.IsKeyDown(Keys.Escape))
+            {
+                _currentState = GameState.Paused;
+                _selectedPauseOption = 0; // Reset to Resume
+                System.Diagnostics.Debug.WriteLine("Game paused");
+                return;
+            }
+
             if (keyboardState.IsKeyDown(Keys.H) && !_previousKeyboardState.IsKeyDown(Keys.H))
                 _showHitboxes = !_showHitboxes;
 
@@ -253,6 +268,81 @@ namespace fire_and_ice
                     System.Diagnostics.Debug.WriteLine("Restart key pressed - Restarting game");
                     RestartGame();
                 }
+            }
+        }
+
+        private void UpdateMainMenu(GameTime gameTime, KeyboardState keyboardState)
+        {
+            // Navigate menu with Up/Down or W/S keys
+            if ((keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S)) &&
+                !_previousKeyboardState.IsKeyDown(Keys.Down) && !_previousKeyboardState.IsKeyDown(Keys.S))
+            {
+                _selectedMenuOption = (_selectedMenuOption + 1) % MENU_OPTIONS_COUNT;
+            }
+
+            if ((keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W)) &&
+                !_previousKeyboardState.IsKeyDown(Keys.Up) && !_previousKeyboardState.IsKeyDown(Keys.W))
+            {
+                _selectedMenuOption = (_selectedMenuOption - 1 + MENU_OPTIONS_COUNT) % MENU_OPTIONS_COUNT;
+            }
+
+            // Select option with Enter or Space
+            if ((keyboardState.IsKeyDown(Keys.Enter) || keyboardState.IsKeyDown(Keys.Space)) &&
+                (!_previousKeyboardState.IsKeyDown(Keys.Enter) && !_previousKeyboardState.IsKeyDown(Keys.Space)))
+            {
+                if (_selectedMenuOption == 0) // Start
+                {
+                    _currentState = GameState.Playing;
+                    System.Diagnostics.Debug.WriteLine("Starting game from main menu");
+                }
+                else if (_selectedMenuOption == 1) // Exit
+                {
+                    Exit();
+                }
+            }
+
+            // Also allow Escape to exit from main menu
+            if (keyboardState.IsKeyDown(Keys.Escape) && !_previousKeyboardState.IsKeyDown(Keys.Escape))
+            {
+                Exit();
+            }
+        }
+
+        private void UpdatePaused(GameTime gameTime, KeyboardState keyboardState)
+        {
+            // Navigate pause menu with Up/Down or W/S keys
+            if ((keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S)) &&
+                !_previousKeyboardState.IsKeyDown(Keys.Down) && !_previousKeyboardState.IsKeyDown(Keys.S))
+            {
+                _selectedPauseOption = (_selectedPauseOption + 1) % PAUSE_OPTIONS_COUNT;
+            }
+
+            if ((keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W)) &&
+                !_previousKeyboardState.IsKeyDown(Keys.Up) && !_previousKeyboardState.IsKeyDown(Keys.W))
+            {
+                _selectedPauseOption = (_selectedPauseOption - 1 + PAUSE_OPTIONS_COUNT) % PAUSE_OPTIONS_COUNT;
+            }
+
+            // Select option with Enter or Space
+            if ((keyboardState.IsKeyDown(Keys.Enter) || keyboardState.IsKeyDown(Keys.Space)) &&
+                (!_previousKeyboardState.IsKeyDown(Keys.Enter) && !_previousKeyboardState.IsKeyDown(Keys.Space)))
+            {
+                if (_selectedPauseOption == 0) // Resume
+                {
+                    _currentState = GameState.Playing;
+                    System.Diagnostics.Debug.WriteLine("Resuming game from pause menu");
+                }
+                else if (_selectedPauseOption == 1) // Exit
+                {
+                    Exit();
+                }
+            }
+
+            // Also allow Escape to resume (toggle pause)
+            if (keyboardState.IsKeyDown(Keys.Escape) && !_previousKeyboardState.IsKeyDown(Keys.Escape))
+            {
+                _currentState = GameState.Playing;
+                System.Diagnostics.Debug.WriteLine("Resuming game with ESC key");
             }
         }
 
@@ -373,11 +463,11 @@ namespace fire_and_ice
                     break;
 
                 case GameState.MainMenu:
-                    // Future: Draw main menu
+                    DrawMainMenu();
                     break;
 
                 case GameState.Paused:
-                    // Future: Draw pause screen
+                    DrawPaused();
                     break;
             }
 
@@ -570,6 +660,288 @@ namespace fire_and_ice
                 {
                     _spriteBatch.Draw(_pixelTexture, new Rectangle(centerX + 20, indicatorY, 80, 30), Color.Cyan);
                 }
+            }
+        }
+
+        private void DrawMainMenu()
+        {
+            // Draw start page background
+            _spriteBatch.Draw(_startPageTexture,
+                new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height),
+                Color.White);
+
+            // Menu dimensions and positioning
+            int menuWidth = 300;
+            int menuHeight = 200;
+            int menuX = (GraphicsDevice.Viewport.Width - menuWidth) / 2;
+            int menuY = (GraphicsDevice.Viewport.Height - menuHeight) / 2;
+
+            // Draw semi-transparent menu background
+            _spriteBatch.Draw(_pixelTexture,
+                new Rectangle(menuX, menuY, menuWidth, menuHeight),
+                Color.Black * 0.7f);
+
+            // Draw menu border
+            int borderThickness = 3;
+            // Top border
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(menuX, menuY, menuWidth, borderThickness), Color.Gold);
+            // Bottom border
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(menuX, menuY + menuHeight - borderThickness, menuWidth, borderThickness), Color.Gold);
+            // Left border
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(menuX, menuY, borderThickness, menuHeight), Color.Gold);
+            // Right border
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(menuX + menuWidth - borderThickness, menuY, borderThickness, menuHeight), Color.Gold);
+
+            if (_debugFont != null)
+            {
+                // Draw title
+                string title = "FIRE AND ICE";
+                Vector2 titleSize = _debugFont.MeasureString(title);
+                float titleScale = 2f;
+                Vector2 titlePosition = new Vector2(
+                    menuX + (menuWidth - titleSize.X * titleScale) / 2,
+                    menuY + 20
+                );
+
+                // Draw title shadow
+                _spriteBatch.DrawString(_debugFont, title,
+                    titlePosition + new Vector2(2, 2),
+                    Color.Black, 0f, Vector2.Zero, titleScale, SpriteEffects.None, 0f);
+
+                // Draw title
+                _spriteBatch.DrawString(_debugFont, title,
+                    titlePosition,
+                    Color.Orange, 0f, Vector2.Zero, titleScale, SpriteEffects.None, 0f);
+
+                // Menu options
+                string[] menuOptions = { "START", "EXIT" };
+                int optionSpacing = 50;
+                int firstOptionY = menuY + 90;
+
+                for (int i = 0; i < menuOptions.Length; i++)
+                {
+                    string option = menuOptions[i];
+                    Vector2 optionSize = _debugFont.MeasureString(option);
+                    float optionScale = 1.5f;
+                    Vector2 optionPosition = new Vector2(
+                        menuX + (menuWidth - optionSize.X * optionScale) / 2,
+                        firstOptionY + i * optionSpacing
+                    );
+
+                    // Determine color based on selection
+                    Color optionColor = (_selectedMenuOption == i) ? Color.Yellow : Color.White;
+
+                    // Draw selection indicator
+                    if (_selectedMenuOption == i)
+                    {
+                        // Draw highlight background
+                        _spriteBatch.Draw(_pixelTexture,
+                            new Rectangle((int)optionPosition.X - 10, (int)optionPosition.Y - 5,
+                                         (int)(optionSize.X * optionScale) + 20, (int)(optionSize.Y * optionScale) + 10),
+                            Color.Orange * 0.3f);
+
+                        // Draw arrow indicator
+                        string arrow = ">";
+                        _spriteBatch.DrawString(_debugFont, arrow,
+                            new Vector2(optionPosition.X - 30, optionPosition.Y),
+                            Color.Yellow, 0f, Vector2.Zero, optionScale, SpriteEffects.None, 0f);
+                    }
+
+                    // Draw option shadow
+                    _spriteBatch.DrawString(_debugFont, option,
+                        optionPosition + new Vector2(2, 2),
+                        Color.Black, 0f, Vector2.Zero, optionScale, SpriteEffects.None, 0f);
+
+                    // Draw option text
+                    _spriteBatch.DrawString(_debugFont, option,
+                        optionPosition,
+                        optionColor, 0f, Vector2.Zero, optionScale, SpriteEffects.None, 0f);
+                }
+
+                // Draw controls hint at bottom
+                string controlsHint = "Use W/S or Arrow Keys to navigate, Enter/Space to select";
+                Vector2 hintSize = _debugFont.MeasureString(controlsHint);
+                Vector2 hintPosition = new Vector2(
+                    (GraphicsDevice.Viewport.Width - hintSize.X) / 2,
+                    GraphicsDevice.Viewport.Height - 30
+                );
+
+                _spriteBatch.DrawString(_debugFont, controlsHint,
+                    hintPosition,
+                    Color.White * 0.7f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            }
+            else
+            {
+                // Fallback: Draw simple colored blocks for menu options if no font
+                int blockHeight = 40;
+                int blockWidth = 200;
+                int blockX = menuX + (menuWidth - blockWidth) / 2;
+                int firstBlockY = menuY + 80;
+                int blockSpacing = 60;
+
+                // Start option
+                Color startColor = (_selectedMenuOption == 0) ? Color.Green : Color.DarkGreen;
+                _spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(blockX, firstBlockY, blockWidth, blockHeight),
+                    startColor);
+
+                // Exit option
+                Color exitColor = (_selectedMenuOption == 1) ? Color.Red : Color.DarkRed;
+                _spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(blockX, firstBlockY + blockSpacing, blockWidth, blockHeight),
+                    exitColor);
+            }
+        }
+
+        private void DrawPaused()
+        {
+            // Draw the game world in the background (slightly dimmed)
+            _spriteBatch.Draw(_levelTexture,
+                new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height),
+                Color.White * 0.6f);
+
+            // Draw doors (behind players)
+            _door1.Draw(_spriteBatch, _pixelTexture);
+            _door2.Draw(_spriteBatch, _pixelTexture);
+
+            // Draw animated flames
+            foreach (var flame in _flames)
+            {
+                flame.Draw(_spriteBatch, _pixelTexture);
+            }
+
+            // Draw keys
+            _key1.Draw(_spriteBatch, _pixelTexture);
+            _key2.Draw(_spriteBatch, _pixelTexture);
+
+            // Draw players
+            _player.Draw(_spriteBatch);
+            _player2.Draw(_spriteBatch);
+
+            // Draw semi-transparent overlay
+            Rectangle screenRect = new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+            _spriteBatch.Draw(_pixelTexture, screenRect, Color.Black * 0.5f);
+
+            // Pause menu dimensions and positioning
+            int menuWidth = 300;
+            int menuHeight = 200;
+            int menuX = (GraphicsDevice.Viewport.Width - menuWidth) / 2;
+            int menuY = (GraphicsDevice.Viewport.Height - menuHeight) / 2;
+
+            // Draw semi-transparent menu background
+            _spriteBatch.Draw(_pixelTexture,
+                new Rectangle(menuX, menuY, menuWidth, menuHeight),
+                Color.Black * 0.8f);
+
+            // Draw menu border
+            int borderThickness = 3;
+            // Top border
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(menuX, menuY, menuWidth, borderThickness), Color.Cyan);
+            // Bottom border
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(menuX, menuY + menuHeight - borderThickness, menuWidth, borderThickness), Color.Cyan);
+            // Left border
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(menuX, menuY, borderThickness, menuHeight), Color.Cyan);
+            // Right border
+            _spriteBatch.Draw(_pixelTexture, new Rectangle(menuX + menuWidth - borderThickness, menuY, borderThickness, menuHeight), Color.Cyan);
+
+            if (_debugFont != null)
+            {
+                // Draw title
+                string title = "PAUSED";
+                Vector2 titleSize = _debugFont.MeasureString(title);
+                float titleScale = 2.5f;
+                Vector2 titlePosition = new Vector2(
+                    menuX + (menuWidth - titleSize.X * titleScale) / 2,
+                    menuY + 20
+                );
+
+                // Draw title shadow
+                _spriteBatch.DrawString(_debugFont, title,
+                    titlePosition + new Vector2(2, 2),
+                    Color.Black, 0f, Vector2.Zero, titleScale, SpriteEffects.None, 0f);
+
+                // Draw title
+                _spriteBatch.DrawString(_debugFont, title,
+                    titlePosition,
+                    Color.Cyan, 0f, Vector2.Zero, titleScale, SpriteEffects.None, 0f);
+
+                // Pause menu options
+                string[] pauseOptions = { "RESUME", "EXIT" };
+                int optionSpacing = 50;
+                int firstOptionY = menuY + 90;
+
+                for (int i = 0; i < pauseOptions.Length; i++)
+                {
+                    string option = pauseOptions[i];
+                    Vector2 optionSize = _debugFont.MeasureString(option);
+                    float optionScale = 1.5f;
+                    Vector2 optionPosition = new Vector2(
+                        menuX + (menuWidth - optionSize.X * optionScale) / 2,
+                        firstOptionY + i * optionSpacing
+                    );
+
+                    // Determine color based on selection
+                    Color optionColor = (_selectedPauseOption == i) ? Color.Yellow : Color.White;
+
+                    // Draw selection indicator
+                    if (_selectedPauseOption == i)
+                    {
+                        // Draw highlight background
+                        _spriteBatch.Draw(_pixelTexture,
+                            new Rectangle((int)optionPosition.X - 10, (int)optionPosition.Y - 5,
+                                         (int)(optionSize.X * optionScale) + 20, (int)(optionSize.Y * optionScale) + 10),
+                            Color.Cyan * 0.3f);
+
+                        // Draw arrow indicator
+                        string arrow = ">";
+                        _spriteBatch.DrawString(_debugFont, arrow,
+                            new Vector2(optionPosition.X - 30, optionPosition.Y),
+                            Color.Yellow, 0f, Vector2.Zero, optionScale, SpriteEffects.None, 0f);
+                    }
+
+                    // Draw option shadow
+                    _spriteBatch.DrawString(_debugFont, option,
+                        optionPosition + new Vector2(2, 2),
+                        Color.Black, 0f, Vector2.Zero, optionScale, SpriteEffects.None, 0f);
+
+                    // Draw option text
+                    _spriteBatch.DrawString(_debugFont, option,
+                        optionPosition,
+                        optionColor, 0f, Vector2.Zero, optionScale, SpriteEffects.None, 0f);
+                }
+
+                // Draw controls hint at bottom
+                string controlsHint = "W/S or Arrows to navigate | Enter/Space to select | ESC to resume";
+                Vector2 hintSize = _debugFont.MeasureString(controlsHint);
+                Vector2 hintPosition = new Vector2(
+                    (GraphicsDevice.Viewport.Width - hintSize.X) / 2,
+                    GraphicsDevice.Viewport.Height - 30
+                );
+
+                _spriteBatch.DrawString(_debugFont, controlsHint,
+                    hintPosition,
+                    Color.White * 0.7f, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
+            }
+            else
+            {
+                // Fallback: Draw simple colored blocks for pause menu options if no font
+                int blockHeight = 40;
+                int blockWidth = 200;
+                int blockX = menuX + (menuWidth - blockWidth) / 2;
+                int firstBlockY = menuY + 80;
+                int blockSpacing = 60;
+
+                // Resume option
+                Color resumeColor = (_selectedPauseOption == 0) ? Color.Green : Color.DarkGreen;
+                _spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(blockX, firstBlockY, blockWidth, blockHeight),
+                    resumeColor);
+
+                // Exit option
+                Color exitColor = (_selectedPauseOption == 1) ? Color.Red : Color.DarkRed;
+                _spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(blockX, firstBlockY + blockSpacing, blockWidth, blockHeight),
+                    exitColor);
             }
         }
     }
