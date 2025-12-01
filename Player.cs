@@ -41,8 +41,8 @@ namespace fire_and_ice
         public float JumpPower { get; set; } = 400f;
         public float MoveSpeed { get; set; } = 200f; // kept for compatibility
         public bool IsOnGround { get; set; }
-        public int HitboxOffsetX { get; set; } = 10;
-        public int HitboxOffsetY { get; set; } = 5;
+        public int HitboxOffsetX { get; set; } = 28;
+        public int HitboxOffsetY { get; set; } = 16;
 
         // Health system
         public float Health { get; private set; } = 100f;
