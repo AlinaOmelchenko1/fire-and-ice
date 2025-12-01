@@ -79,6 +79,10 @@ namespace fire_and_ice
             _levelTexture = Content.Load<Texture2D>("first_level");
             _startPageTexture = Content.Load<Texture2D>("start_page");
             Texture2D heroTexture = Content.Load<Texture2D>("hero_walk");
+            Texture2D character2Texture = Content.Load<Texture2D>("character2");
+
+            System.Diagnostics.Debug.WriteLine($"hero_walk dimensions: {heroTexture.Width}x{heroTexture.Height}, frame size: {heroTexture.Width/4}x{heroTexture.Height}");
+            System.Diagnostics.Debug.WriteLine($"character2 dimensions: {character2Texture.Width}x{character2Texture.Height}, frame size: {character2Texture.Width/4}x{character2Texture.Height}");
 
             try
             {
@@ -122,9 +126,9 @@ namespace fire_and_ice
             _player.JumpKey2 = Keys.Space;
             _player.JumpKey3 = Keys.None; // Not used
 
-            // Player 2 - Light Blue, spawns in opposite corner (right side) - Arrow keys
-            _player2 = new Player(heroTexture, new Vector2(700, 270));
-            _player2.PlayerColor = Color.Cyan;
+            // Player 2 - Ice character, spawns in opposite corner (right side) - Arrow keys
+            _player2 = new Player(character2Texture, new Vector2(700, 270)); // 4 frames (default)
+            _player2.PlayerColor = Color.White; // No color tinting needed
             _player2.MoveLeftKey = Keys.Left;
             _player2.MoveRightKey = Keys.Right;
             _player2.JumpKey1 = Keys.Up;

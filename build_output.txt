@@ -1,0 +1,53 @@
+  Determining projects to restore...
+  Restoring dotnet tools (this might take a while depending on your internet speed and should only happen upon building your project for the first time, or after upgrading MonoGame, or clearing your nuget cache)
+  Tool 'dotnet-mgcb' (version '3.8.4') was restored. Available commands: mgcb
+  Tool 'dotnet-mgcb-editor' (version '3.8.4') was restored. Available commands: mgcb-editor
+  Tool 'dotnet-mgcb-editor-linux' (version '3.8.4') was restored. Available commands: mgcb-editor-linux
+  Tool 'dotnet-mgcb-editor-windows' (version '3.8.4') was restored. Available commands: mgcb-editor-windows
+  Tool 'dotnet-mgcb-editor-mac' (version '3.8.4') was restored. Available commands: mgcb-editor-mac
+  
+  Restore was successful.
+  All projects are up-to-date for restore.
+  Restoring dotnet tools (this might take a while depending on your internet speed and should only happen upon building your project for the first time, or after upgrading MonoGame, or clearing your nuget cache)
+  Tool 'dotnet-mgcb' (version '3.8.4') was restored. Available commands: mgcb
+  Tool 'dotnet-mgcb-editor' (version '3.8.4') was restored. Available commands: mgcb-editor
+  Tool 'dotnet-mgcb-editor-linux' (version '3.8.4') was restored. Available commands: mgcb-editor-linux
+  Tool 'dotnet-mgcb-editor-windows' (version '3.8.4') was restored. Available commands: mgcb-editor-windows
+  Tool 'dotnet-mgcb-editor-mac' (version '3.8.4') was restored. Available commands: mgcb-editor-mac
+  
+  Restore was successful.
+  Tool 'dotnet-mgcb' is already installed.
+C:\Users\Rostyslav\source\repos\fire and ice\Game1.cs(589,17): warning CS0219: The variable 'blockSize' is assigned but its value is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(15,24): warning CS0169: The field 'CollisionProtagonist._timer' is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(11,27): warning CS0169: The field 'CollisionProtagonist._texture' is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(14,21): warning CS0649: Field 'CollisionProtagonist._currentFrame' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(13,21): warning CS0649: Field 'CollisionProtagonist._frameWidth' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(12,25): warning CS0649: Field 'CollisionProtagonist._position' is never assigned to, and will always have its default value [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(13,48): warning CS0169: The field 'CollisionProtagonist._frameCount' is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(13,34): warning CS0649: Field 'CollisionProtagonist._frameHeight' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(17,22): warning CS0169: The field 'CollisionProtagonist._isMoving' is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(32,21): warning CS0649: Field 'CollisionProtagonist._hitboxHeight' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(31,21): warning CS0649: Field 'CollisionProtagonist._hitboxWidth' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(22,23): warning CS0414: The field 'CollisionProtagonist._gravity' is assigned but its value is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(16,24): warning CS0414: The field 'CollisionProtagonist._interval' is assigned but its value is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+  fire and ice -> C:\Users\Rostyslav\source\repos\fire and ice\bin\Debug\net8.0\fire and ice.dll
+
+Build succeeded.
+
+C:\Users\Rostyslav\source\repos\fire and ice\Game1.cs(589,17): warning CS0219: The variable 'blockSize' is assigned but its value is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(15,24): warning CS0169: The field 'CollisionProtagonist._timer' is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(11,27): warning CS0169: The field 'CollisionProtagonist._texture' is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(14,21): warning CS0649: Field 'CollisionProtagonist._currentFrame' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(13,21): warning CS0649: Field 'CollisionProtagonist._frameWidth' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(12,25): warning CS0649: Field 'CollisionProtagonist._position' is never assigned to, and will always have its default value [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(13,48): warning CS0169: The field 'CollisionProtagonist._frameCount' is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(13,34): warning CS0649: Field 'CollisionProtagonist._frameHeight' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(17,22): warning CS0169: The field 'CollisionProtagonist._isMoving' is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(32,21): warning CS0649: Field 'CollisionProtagonist._hitboxHeight' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(31,21): warning CS0649: Field 'CollisionProtagonist._hitboxWidth' is never assigned to, and will always have its default value 0 [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(22,23): warning CS0414: The field 'CollisionProtagonist._gravity' is assigned but its value is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+C:\Users\Rostyslav\source\repos\fire and ice\CollisionProtagonist.cs(16,24): warning CS0414: The field 'CollisionProtagonist._interval' is assigned but its value is never used [C:\Users\Rostyslav\source\repos\fire and ice\fire and ice.csproj]
+    13 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.33

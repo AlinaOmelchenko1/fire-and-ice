@@ -75,15 +75,17 @@ namespace fire_and_ice
             set { position = value; }
         }
 
-        public Player(Texture2D playerTexture, Vector2 startPosition)
+        public Player(Texture2D playerTexture, Vector2 startPosition, int animationFrameCount = 4)
         {
             texture = playerTexture ?? throw new ArgumentNullException(nameof(playerTexture));
             position = startPosition;
             velocity = Vector2.Zero;
 
-            frameCount = 4;
+            frameCount = animationFrameCount;
             frameWidth = playerTexture.Width / frameCount;
             frameHeight = playerTexture.Height;
+
+            System.Diagnostics.Debug.WriteLine($"Player created: texture={playerTexture.Width}x{playerTexture.Height}, frames={frameCount}, frameSize={frameWidth}x{frameHeight}");
 
             // Defaults already set via properties/fields
             currentFrame = 0;
