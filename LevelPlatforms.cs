@@ -73,6 +73,13 @@ namespace fire_and_ice
                 damageAmount: 10f  // 10 damage per hit
             ));
 
+            // ICE HAZARD - ice shard left of left crate (only damages fire character)
+            platforms.Add(new InteractableObject(
+                new Rectangle(20, 360, 30, 40),
+                SurfaceType.IceHazard,
+                damageAmount: 8f  // 8 damage per hit (only to fire character)
+            ));
+
             return platforms;
         }
 

@@ -18,7 +18,8 @@ namespace fire_and_ice
         Bouncy = 7,       // Bouncy - bounce pads
         Sticky = 8,       // Sticky - slows horizontal movement
         Spike = 9,        // Spike - instant death or high damage
-        Fire = 10         // Fire - damage over time
+        Fire = 10,        // Fire - damage over time
+        IceHazard = 11    // Ice shard - damages fire character only
     }
 
     /// <summary>
@@ -58,6 +59,7 @@ namespace fire_and_ice
                 SurfaceType.Sticky => Color.Brown * 0.5f,
                 SurfaceType.Spike => Color.DarkRed * 0.7f,
                 SurfaceType.Fire => Color.Yellow * 0.6f,
+                SurfaceType.IceHazard => Color.Cyan * 0.8f,
                 _ => Color.Gray * 0.3f
             };
         }

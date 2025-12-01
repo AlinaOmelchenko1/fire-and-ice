@@ -53,8 +53,9 @@ namespace fire_and_ice
         private Door _door2; // Right door
         private bool _doorsOpening = false;
 
-        // Flames
+        // Flames and Ice Shards
         private List<Flame> _flames;
+        private List<IceShard> _iceShards;
 
         private bool _showHitboxes = false;
         private bool _showTimerInfo = false;
@@ -122,6 +123,7 @@ namespace fire_and_ice
 
             // Player 1 - Original (white/default color) - WASD + Space controls
             _player = new Player(heroTexture, new Vector2(85, 270));
+            _player.Type = PlayerType.Fire; // Fire character
             _player.PlayerColor = Color.White;
             _player.MoveLeftKey = Keys.A;
             _player.MoveRightKey = Keys.D;
@@ -131,6 +133,7 @@ namespace fire_and_ice
 
             // Player 2 - Ice character, spawns in opposite corner (right side) - Arrow keys
             _player2 = new Player(character2Texture, new Vector2(700, 270)); // 4 frames (default)
+            _player2.Type = PlayerType.Ice; // Ice character
             _player2.PlayerColor = Color.White; // No color tinting needed
             _player2.MoveLeftKey = Keys.Left;
             _player2.MoveRightKey = Keys.Right;
@@ -156,8 +159,19 @@ namespace fire_and_ice
                 }
             }
 
+            // Initialize ice shards for all ice hazards
+            _iceShards = new List<IceShard>();
+            foreach (var platform in _platforms)
+            {
+                if (platform.Type == SurfaceType.IceHazard)
+                {
+                    _iceShards.Add(new IceShard(platform.Bounds));
+                }
+            }
+
             System.Diagnostics.Debug.WriteLine($"Loaded {_platforms.Count} platforms");
             System.Diagnostics.Debug.WriteLine($"Created {_flames.Count} animated flames");
+            System.Diagnostics.Debug.WriteLine($"Created {_iceShards.Count} animated ice shards");
         }
 
         protected override void Update(GameTime gameTime)
@@ -251,6 +265,12 @@ namespace fire_and_ice
             foreach (var flame in _flames)
             {
                 flame.Update(gameTime);
+            }
+
+            // Update ice shards
+            foreach (var iceShard in _iceShards)
+            {
+                iceShard.Update(gameTime);
             }
 
             // Check for victory - both doors open and both players at their respective doors
@@ -544,6 +564,12 @@ namespace fire_and_ice
             foreach (var flame in _flames)
             {
                 flame.Draw(_spriteBatch, _pixelTexture);
+            }
+
+            // Draw animated ice shards
+            foreach (var iceShard in _iceShards)
+            {
+                iceShard.Draw(_spriteBatch, _pixelTexture);
             }
 
             // Draw keys
@@ -934,6 +960,12 @@ namespace fire_and_ice
             foreach (var flame in _flames)
             {
                 flame.Draw(_spriteBatch, _pixelTexture);
+            }
+
+            // Draw animated ice shards
+            foreach (var iceShard in _iceShards)
+            {
+                iceShard.Draw(_spriteBatch, _pixelTexture);
             }
 
             // Draw keys

@@ -6,8 +6,17 @@ using System.Collections.Generic;
 
 namespace fire_and_ice
 {
+    public enum PlayerType
+    {
+        Fire,
+        Ice
+    }
+
     public class Player
     {
+        // Player type (Fire or Ice)
+        public PlayerType Type { get; set; } = PlayerType.Fire;
+
         // Textures / animation
         private Texture2D texture;
         private int frameWidth;
@@ -346,6 +355,17 @@ namespace fire_and_ice
                     {
                         ShouldApplyCollision = false, // Can walk through
                         DamageTaken = obj.DamageAmount > 0 ? obj.DamageAmount : 10f,
+                        VelocityModifier = Vector2.Zero,
+                        FrictionMultiplier = 1f,
+                        BounceForce = 0f
+                    };
+
+                case SurfaceType.IceHazard:
+                    // Only damages Fire character, Ice character can walk through safely
+                    return new InteractionResult
+                    {
+                        ShouldApplyCollision = false, // Can walk through
+                        DamageTaken = (Type == PlayerType.Fire) ? (obj.DamageAmount > 0 ? obj.DamageAmount : 10f) : 0f,
                         VelocityModifier = Vector2.Zero,
                         FrictionMultiplier = 1f,
                         BounceForce = 0f
