@@ -12,7 +12,8 @@ namespace fire_and_ice
         MainMenu,    // For future start screen
         Playing,
         GameOver,
-        Paused       // For future pause functionality
+        Paused,      // For future pause functionality
+        Victory      // Level completed!
     }
 
     public class Game1 : Game
@@ -25,6 +26,8 @@ namespace fire_and_ice
         private GameState _currentState = GameState.MainMenu;
         private float _gameOverTimer = 0f;
         private const float GAME_OVER_DELAY = 2f; // Show game over for 2 seconds before allowing restart
+        private float _victoryTimer = 0f;
+        private const float VICTORY_DISPLAY_TIME = 5f; // Show victory screen for 5 seconds
 
         private Texture2D _levelTexture;
         private Texture2D _startPageTexture;
@@ -179,6 +182,10 @@ namespace fire_and_ice
                 case GameState.Paused:
                     UpdatePaused(gameTime, keyboardState);
                     break;
+
+                case GameState.Victory:
+                    UpdateVictory(gameTime, keyboardState);
+                    break;
             }
 
             _previousKeyboardState = keyboardState;
@@ -246,6 +253,26 @@ namespace fire_and_ice
                 flame.Update(gameTime);
             }
 
+            // Check for victory - both doors open and both players at their respective doors
+            if (_door1.IsOpen && _door2.IsOpen)
+            {
+                Rectangle door1Bounds = _door1.GetBounds();
+                Rectangle door2Bounds = _door2.GetBounds();
+                Rectangle player1Hitbox = _player.GetHitbox();
+                Rectangle player2Hitbox = _player2.GetHitbox();
+
+                bool player1AtDoor1 = player1Hitbox.Intersects(door1Bounds);
+                bool player2AtDoor2 = player2Hitbox.Intersects(door2Bounds);
+
+                if (player1AtDoor1 && player2AtDoor2)
+                {
+                    System.Diagnostics.Debug.WriteLine("=== VICTORY! Both players reached their doors! ===");
+                    _currentState = GameState.Victory;
+                    _victoryTimer = 0f;
+                    return;
+                }
+            }
+
             // Check for game over
             if (!_player.IsAlive || !_player2.IsAlive)
             {
@@ -272,6 +299,26 @@ namespace fire_and_ice
                     System.Diagnostics.Debug.WriteLine("Restart key pressed - Restarting game");
                     RestartGame();
                 }
+            }
+        }
+
+        private void UpdateVictory(GameTime gameTime, KeyboardState keyboardState)
+        {
+            _victoryTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            System.Diagnostics.Debug.WriteLine($"Victory Update - Timer: {_victoryTimer:F2}s");
+
+            // After display time, return to main menu
+            if (_victoryTimer >= VICTORY_DISPLAY_TIME)
+            {
+                System.Diagnostics.Debug.WriteLine("Victory timer complete - Returning to main menu");
+                _currentState = GameState.MainMenu;
+                _selectedMenuOption = 0;
+
+                // Reset game state for next play
+                RestartGame();
+                // Override the state back to MainMenu since RestartGame sets it to Playing
+                _currentState = GameState.MainMenu;
             }
         }
 
@@ -473,6 +520,10 @@ namespace fire_and_ice
                 case GameState.Paused:
                     DrawPaused();
                     break;
+
+                case GameState.Victory:
+                    DrawVictory();
+                    break;
             }
 
             _spriteBatch.End();
@@ -664,6 +715,77 @@ namespace fire_and_ice
                 {
                     _spriteBatch.Draw(_pixelTexture, new Rectangle(centerX + 20, indicatorY, 80, 30), Color.Cyan);
                 }
+            }
+        }
+
+        private void DrawVictory()
+        {
+            // Draw the game world in the background
+            _spriteBatch.Draw(_levelTexture,
+                new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height),
+                Color.White);
+
+            // Draw doors
+            _door1.Draw(_spriteBatch, _pixelTexture);
+            _door2.Draw(_spriteBatch, _pixelTexture);
+
+            // Draw players
+            _player.Draw(_spriteBatch);
+            _player2.Draw(_spriteBatch);
+
+            // Draw semi-transparent overlay
+            Rectangle screenRect = new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+            _spriteBatch.Draw(_pixelTexture, screenRect, Color.Black * 0.6f);
+
+            if (_debugFont != null)
+            {
+                int centerX = GraphicsDevice.Viewport.Width / 2;
+                int centerY = GraphicsDevice.Viewport.Height / 2;
+
+                // Draw "CONGRATULATIONS!" text
+                string victoryText = "CONGRATULATIONS!";
+                Vector2 textSize = _debugFont.MeasureString(victoryText);
+                float textScale = 2.5f;
+                Vector2 textPosition = new Vector2(
+                    (GraphicsDevice.Viewport.Width - textSize.X * textScale) / 2,
+                    (GraphicsDevice.Viewport.Height - textSize.Y * textScale) / 2 - 40
+                );
+
+                // Draw shadow
+                _spriteBatch.DrawString(_debugFont, victoryText,
+                    textPosition + new Vector2(4, 4),
+                    Color.Black, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+
+                // Draw main text with gold color
+                _spriteBatch.DrawString(_debugFont, victoryText,
+                    textPosition,
+                    Color.Gold, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+
+                // Draw "Level Complete!" subtitle
+                string subtitleText = "Level Complete!";
+                Vector2 subtitleSize = _debugFont.MeasureString(subtitleText);
+                float subtitleScale = 1.5f;
+                Vector2 subtitlePosition = new Vector2(
+                    (GraphicsDevice.Viewport.Width - subtitleSize.X * subtitleScale) / 2,
+                    textPosition.Y + textSize.Y * textScale + 20
+                );
+
+                _spriteBatch.DrawString(_debugFont, subtitleText,
+                    subtitlePosition + new Vector2(2, 2),
+                    Color.Black, 0f, Vector2.Zero, subtitleScale, SpriteEffects.None, 0f);
+
+                _spriteBatch.DrawString(_debugFont, subtitleText,
+                    subtitlePosition,
+                    Color.White, 0f, Vector2.Zero, subtitleScale, SpriteEffects.None, 0f);
+
+                // Timer countdown removed - just display congratulations
+            }
+            else
+            {
+                // Fallback: Draw colored victory indicator if no font
+                int centerX = GraphicsDevice.Viewport.Width / 2;
+                int centerY = GraphicsDevice.Viewport.Height / 2;
+                _spriteBatch.Draw(_pixelTexture, new Rectangle(centerX - 150, centerY - 50, 300, 100), Color.Gold * 0.8f);
             }
         }
 
