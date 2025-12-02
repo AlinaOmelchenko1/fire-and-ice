@@ -97,10 +97,19 @@
   - CheckCollision() allows object-to-object collision testing
   - Build passed with 0 errors, 0 warnings
 
-#### Step 2.5: Create Animated Object Base Class
-- [ ] Create `Core/AnimatedObject.cs` base class
-- [ ] Move common animation logic from Flame and IceShard
-- [ ] Implement common Update pattern for animations
+#### Step 2.5: Create Animated Object Base Class ✅ COMPLETED
+- [x] Create `Core/AnimatedObject.cs` base class - **DONE**
+- [x] Move common animation logic from Flame and IceShard - **DONE**
+  - Provides Bounds property for all animated objects
+  - Includes AnimationTimer and SecondaryTimer for multi-phase animations
+  - CurrentIntensity property for brightness/alpha effects
+  - Shared Random instance with randomized initial phase
+  - Implements IGameObject interface
+- [x] Implement common Update pattern for animations - **DONE**
+  - Abstract UpdateAnimation() method for derived classes
+  - Helper methods: CalculateSineWave(), CalculateIntensity(), Clamp()
+  - Comprehensive XML documentation throughout
+- [x] Build passed with 0 errors, 0 warnings
 
 ---
 
