@@ -846,24 +846,8 @@ namespace fire_and_ice
 
             if (_debugFont != null)
             {
-                // Draw title
-                string title = "FIRE AND ICE";
-                Vector2 titleSize = _debugFont.MeasureString(title);
-                float titleScale = 2f;
-                Vector2 titlePosition = new Vector2(
-                    menuX + (menuWidth - titleSize.X * titleScale) / 2,
-                    menuY + 20
-                );
-
-                // Draw title shadow
-                _spriteBatch.DrawString(_debugFont, title,
-                    titlePosition + new Vector2(2, 2),
-                    Color.Black, 0f, Vector2.Zero, titleScale, SpriteEffects.None, 0f);
-
-                // Draw title
-                _spriteBatch.DrawString(_debugFont, title,
-                    titlePosition,
-                    Color.Orange, 0f, Vector2.Zero, titleScale, SpriteEffects.None, 0f);
+                // Title removed - already present on background image
+                // Keeping blank space for layout
 
                 // Menu options
                 string[] menuOptions = { "START", "EXIT" };
