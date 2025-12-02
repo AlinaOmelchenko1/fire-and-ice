@@ -9,10 +9,10 @@ namespace fire_and_ice
     // Game State Machine
     public enum GameState
     {
-        MainMenu,    // For future start screen
+        MainMenu,    // For start screen
         Playing,
         GameOver,
-        Paused,      // For future pause functionality
+        Paused,      // For pause functionality
         Victory      // Level completed!
     }
 
@@ -662,84 +662,44 @@ namespace fire_and_ice
             Rectangle screenRect = new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
             _spriteBatch.Draw(_pixelTexture, screenRect, Color.Black * 0.7f);
 
-            // Draw big colored blocks to spell GAME OVER (no font needed!)
-            int blockSize = 40;
             int centerX = GraphicsDevice.Viewport.Width / 2;
             int centerY = GraphicsDevice.Viewport.Height / 2;
 
-            // Draw "GAME OVER" as colored blocks
-            _spriteBatch.Draw(_pixelTexture, new Rectangle(centerX - 200, centerY - 60, 380, 120), Color.Red * 0.9f);
+            // Draw red modal window
+            Rectangle modalWindow = new Rectangle(centerX - 200, centerY - 60, 400, 120);
+            _spriteBatch.Draw(_pixelTexture, modalWindow, Color.Red * 0.9f);
 
             // Draw GAME OVER text if font available
             if (_debugFont != null)
             {
                 string gameOverText = "GAME OVER";
                 Vector2 textSize = _debugFont.MeasureString(gameOverText);
+                float textScale = 3f;
+
+                // Center text within the red modal window
                 Vector2 textPosition = new Vector2(
-                    (GraphicsDevice.Viewport.Width - textSize.X * 3) / 2,
-                    (GraphicsDevice.Viewport.Height - textSize.Y * 3) / 2
+                    modalWindow.X + (modalWindow.Width - textSize.X * textScale) / 2,
+                    modalWindow.Y + (modalWindow.Height - textSize.Y * textScale) / 2
                 );
 
-                // Draw shadow
-                _spriteBatch.DrawString(_debugFont, gameOverText,
-                    textPosition + new Vector2(4, 4) * 3,
-                    Color.Black, 0f, Vector2.Zero, 3f, SpriteEffects.None, 0f);
-
-                // Draw main text
+                // Draw black text centered in modal window
                 _spriteBatch.DrawString(_debugFont, gameOverText,
                     textPosition,
-                    Color.Red, 0f, Vector2.Zero, 3f, SpriteEffects.None, 0f);
+                    Color.Black, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
 
-                // Draw restart prompt after delay
+                // Draw restart prompt after delay (below the modal window)
                 if (_gameOverTimer >= GAME_OVER_DELAY)
                 {
                     string restartText = "Press ENTER or SPACE to Restart";
                     Vector2 restartSize = _debugFont.MeasureString(restartText);
                     Vector2 restartPosition = new Vector2(
                         (GraphicsDevice.Viewport.Width - restartSize.X) / 2,
-                        textPosition.Y + textSize.Y * 3 + 40
+                        modalWindow.Bottom + 30
                     );
 
                     _spriteBatch.DrawString(_debugFont, restartText,
                         restartPosition,
                         Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
-                }
-
-                // Show which player died
-                // Which player died indicator
-                if (!_player.IsAlive && !_player2.IsAlive)
-                {
-                    string deathMessage = "Both players died!";
-                    Vector2 deathSize = _debugFont.MeasureString(deathMessage);
-                    _spriteBatch.DrawString(_debugFont, deathMessage,
-                        new Vector2((GraphicsDevice.Viewport.Width - deathSize.X) / 2, textPosition.Y - 40),
-                        Color.Yellow);
-                }
-                else if (!_player.IsAlive)
-                {
-                    _spriteBatch.DrawString(_debugFont, "Player 1 died!",
-                        new Vector2(GraphicsDevice.Viewport.Width / 2 - 60, textPosition.Y - 40),
-                        Color.White);
-                }
-                else if (!_player2.IsAlive)
-                {
-                    _spriteBatch.DrawString(_debugFont, "Player 2 died!",
-                        new Vector2(GraphicsDevice.Viewport.Width / 2 - 60, textPosition.Y - 40),
-                        Color.Cyan);
-                }
-            }
-            else
-            {
-                // No font available - just show colored indicators
-                // Draw color-coded death indicator
-                int indicatorY = centerY - 100;
-                if (!_player.IsAlive)
-                {
-                    _spriteBatch.Draw(_pixelTexture, new Rectangle(centerX - 100, indicatorY, 80, 30), Color.White);
-                }
-                if (!_player2.IsAlive)
-                {
-                    _spriteBatch.Draw(_pixelTexture, new Rectangle(centerX + 20, indicatorY, 80, 30), Color.Cyan);
                 }
             }
         }
