@@ -45,10 +45,11 @@
 - [x] Verify if `PlatformProtagonist.cs` is used - **UNUSED** (Alternative player implementation)
 - [x] Verify if `ImageLevelBackground.cs` is used - **UNUSED** (Alternative background loader)
 
-#### Step 1.2: Remove Unused Files
-- [ ] Delete or move unused files to a `_Legacy` folder
-- [ ] Update namespace references if needed
-- [ ] Build and test to ensure nothing breaks
+#### Step 1.2: Remove Unused Files ✅ COMPLETED
+- [x] Delete or move unused files to a `_Legacy` folder - **DONE** (Created _Legacy folder and moved all 5 files)
+- [x] Update namespace references if needed - **N/A** (No references existed)
+- [x] Build and test to ensure nothing breaks - **PASSED** (0 errors, 0 warnings)
+- [x] Exclude `_Legacy` folder from build in .csproj - **DONE**
 
 #### Step 1.3: Remove Magic Numbers
 - [ ] Create `Constants.cs` file
