@@ -141,6 +141,10 @@ namespace fire_and_ice
             _key1 = new Key(GameConstants.SpawnPositions.Key1Position); // Left upper corner of left wooden crate
             _key2 = new Key(GameConstants.SpawnPositions.Key2Position); // On right wooden crate
 
+            // Set pixel texture for keys after _pixelTexture is initialized
+            _key1.SetPixelTexture(_pixelTexture);
+            _key2.SetPixelTexture(_pixelTexture);
+
             // Initialize doors at top of map (matching green rectangles)
             _door1 = new Door(GameConstants.SpawnPositions.Door1Position); // Top left corner door (moved up 30px, left 5px)
             _door2 = new Door(GameConstants.SpawnPositions.Door2Position); // Top right corner door (moved up 30px, left 5px)
@@ -426,6 +430,8 @@ namespace fire_and_ice
             // Reset keys and doors
             _key1 = new Key(GameConstants.SpawnPositions.Key1Position); // Left upper corner of left wooden crate
             _key2 = new Key(GameConstants.SpawnPositions.Key2Position); // On right wooden crate
+            _key1.SetPixelTexture(_pixelTexture);
+            _key2.SetPixelTexture(_pixelTexture);
             _door1.Reset();
             _door2.Reset();
             _doorsOpening = false;
@@ -566,8 +572,8 @@ namespace fire_and_ice
             }
 
             // Draw keys
-            _key1.Draw(_spriteBatch, _pixelTexture);
-            _key2.Draw(_spriteBatch, _pixelTexture);
+            _key1.Draw(_spriteBatch);
+            _key2.Draw(_spriteBatch);
 
             _player.Draw(_spriteBatch);
             _player2.Draw(_spriteBatch);
@@ -906,8 +912,8 @@ namespace fire_and_ice
             }
 
             // Draw keys
-            _key1.Draw(_spriteBatch, _pixelTexture);
-            _key2.Draw(_spriteBatch, _pixelTexture);
+            _key1.Draw(_spriteBatch);
+            _key2.Draw(_spriteBatch);
 
             // Draw players
             _player.Draw(_spriteBatch);
