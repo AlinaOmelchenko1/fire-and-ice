@@ -135,10 +135,28 @@
   - Draw calls updated to new signature without pixelTexture parameter
 - [x] Build passed with 0 errors, 0 warnings
 
-#### Step 3.2: Refactor Door Class
-- [ ] Implement `IGameObject` interface
-- [ ] Extract animation constants
-- [ ] Add state enum for door states (Closed, Opening, Open)
+#### Step 3.2: Refactor Door Class ✅ COMPLETED
+- [x] Implement `IGameObject` interface - **DONE**
+  - Implemented Update(GameTime) and Draw(SpriteBatch) methods
+  - Draw method now uses internal _pixelTexture field
+  - Added SetPixelTexture() method for initialization
+- [x] Implement `ICollidable` interface - **DONE**
+  - GetBounds() already existed, kept implementation
+  - Added CheckCollision(ICollidable) method with proper collision logic
+  - Collision returns false when door is fully open
+- [x] Extract animation constants - **ALREADY DONE** (using GameConstants)
+  - All magic numbers replaced with GameConstants.Door values
+  - Opacity values use GameConstants.Opacity constants (VeryHigh, Medium)
+- [x] Add comprehensive XML documentation - **DONE**
+  - Documented class, properties, and all methods
+  - Clear descriptions of parameters, return values, and behavior
+  - Explained door opening animation and bar retraction
+- [x] Updated Game1.cs to work with refactored Door - **DONE**
+  - Doors now use SetPixelTexture() for initialization in LoadContent
+  - Draw calls updated to new signature without pixelTexture parameter
+  - Doors maintain texture through Reset() calls (not recreated)
+- [x] Build passed with 0 errors, 0 warnings
+- [ ] Add state enum for door states - **DEFERRED** (Current implementation works well with boolean and progress)
 
 #### Step 3.3: Refactor Flame Class
 - [ ] Inherit from `AnimatedObject` base class

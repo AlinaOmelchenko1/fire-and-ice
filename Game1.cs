@@ -149,6 +149,10 @@ namespace fire_and_ice
             _door1 = new Door(GameConstants.SpawnPositions.Door1Position); // Top left corner door (moved up 30px, left 5px)
             _door2 = new Door(GameConstants.SpawnPositions.Door2Position); // Top right corner door (moved up 30px, left 5px)
 
+            // Set pixel texture for doors after _pixelTexture is initialized
+            _door1.SetPixelTexture(_pixelTexture);
+            _door2.SetPixelTexture(_pixelTexture);
+
             // Initialize flames for all fire hazards
             _flames = new List<Flame>();
             foreach (var platform in _platforms)
@@ -556,8 +560,8 @@ namespace fire_and_ice
                 Color.White);
 
             // Draw doors first (behind players)
-            _door1.Draw(_spriteBatch, _pixelTexture);
-            _door2.Draw(_spriteBatch, _pixelTexture);
+            _door1.Draw(_spriteBatch);
+            _door2.Draw(_spriteBatch);
 
             // Draw animated flames
             foreach (var flame in _flames)
@@ -711,8 +715,8 @@ namespace fire_and_ice
                 Color.White);
 
             // Draw doors
-            _door1.Draw(_spriteBatch, _pixelTexture);
-            _door2.Draw(_spriteBatch, _pixelTexture);
+            _door1.Draw(_spriteBatch);
+            _door2.Draw(_spriteBatch);
 
             // Draw players
             _player.Draw(_spriteBatch);
@@ -896,8 +900,8 @@ namespace fire_and_ice
                 Color.White * 0.6f);
 
             // Draw doors (behind players)
-            _door1.Draw(_spriteBatch, _pixelTexture);
-            _door2.Draw(_spriteBatch, _pixelTexture);
+            _door1.Draw(_spriteBatch);
+            _door2.Draw(_spriteBatch);
 
             // Draw animated flames
             foreach (var flame in _flames)
