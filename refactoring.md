@@ -51,13 +51,19 @@
 - [x] Build and test to ensure nothing breaks - **PASSED** (0 errors, 0 warnings)
 - [x] Exclude `_Legacy` folder from build in .csproj - **DONE**
 
-#### Step 1.3: Remove Magic Numbers
-- [ ] Create `Constants.cs` file
-- [ ] Extract screen dimensions constants
-- [ ] Extract physics constants (gravity, jump power, etc.)
-- [ ] Extract color constants
-- [ ] Extract timing constants (animation speeds, delays)
-- [ ] Replace hard-coded values with named constants
+#### Step 1.3: Remove Magic Numbers ✅ COMPLETED
+- [x] Create `Constants.cs` file - **DONE** (Comprehensive constants file with organized sections)
+- [x] Extract screen dimensions constants - **DONE**
+- [x] Extract physics constants (gravity, jump power, etc.) - **DONE**
+- [x] Extract color constants - **DONE** (Opacity values organized)
+- [x] Extract timing constants (animation speeds, delays) - **DONE**
+- [x] Replace hard-coded values with named constants - **PARTIALLY DONE**
+  - [x] Key.cs - Fully refactored
+  - [x] Door.cs - Fully refactored
+  - [x] Game1.cs - Spawn positions, game state timers, menu counts, health bars, UI positions
+  - [ ] Player.cs - Physics constants still using local values (can be refactored later)
+  - [ ] Flame.cs - Animation constants still hardcoded (can be refactored later)
+  - [ ] IceShard.cs - Animation constants still hardcoded (can be refactored later)
 
 ---
 

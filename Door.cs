@@ -11,10 +11,6 @@ namespace fire_and_ice
         public Vector2 Position { get; set; }
         public bool IsOpen { get; private set; }
         private float _openProgress = 0f; // 0 = closed, 1 = fully open
-        private const float OPEN_SPEED = 1.5f; // Speed of opening animation
-        private const int DOOR_WIDTH = 48;
-        private const int DOOR_HEIGHT = 50;
-        private const int BAR_COUNT = 7;
         private bool _startOpening = false;
 
         public Door(Vector2 position)
@@ -28,8 +24,8 @@ namespace fire_and_ice
             return new Rectangle(
                 (int)Position.X,
                 (int)Position.Y,
-                DOOR_WIDTH,
-                DOOR_HEIGHT
+                GameConstants.Door.Width,
+                GameConstants.Door.Height
             );
         }
 
@@ -42,7 +38,7 @@ namespace fire_and_ice
         {
             if (_startOpening && !IsOpen)
             {
-                _openProgress += OPEN_SPEED * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                _openProgress += GameConstants.Door.OpenSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
                 if (_openProgress >= 1f)
                 {
                     _openProgress = 1f;
@@ -63,13 +59,13 @@ namespace fire_and_ice
             // Draw bars if not fully open
             if (_openProgress < 1f)
             {
-                int barSpacing = doorBounds.Width / (BAR_COUNT + 1);
-                int barWidth = 4;
+                int barSpacing = doorBounds.Width / (GameConstants.Door.BarCount + 1);
+                int barWidth = GameConstants.Door.BarWidth;
 
                 // Calculate how far bars have moved
                 int barOffset = (int)(_openProgress * doorBounds.Height);
 
-                for (int i = 0; i < BAR_COUNT; i++)
+                for (int i = 0; i < GameConstants.Door.BarCount; i++)
                 {
                     int barX = doorBounds.X + barSpacing * (i + 1) - barWidth / 2;
                     int barY = doorBounds.Y + barOffset; // Bars move down as they "retract"
@@ -97,8 +93,8 @@ namespace fire_and_ice
                 // Draw horizontal bars for extra security look
                 if (_openProgress < 0.5f) // Only show horizontal bars in first half of animation
                 {
-                    int horizontalBarHeight = 4;
-                    int horizontalBarCount = 3;
+                    int horizontalBarHeight = GameConstants.Door.HorizontalBarHeight;
+                    int horizontalBarCount = GameConstants.Door.HorizontalBarCount;
                     int horizontalBarSpacing = doorBounds.Height / (horizontalBarCount + 1);
 
                     for (int i = 0; i < horizontalBarCount; i++)

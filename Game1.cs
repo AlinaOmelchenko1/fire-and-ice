@@ -25,9 +25,7 @@ namespace fire_and_ice
         // Game State
         private GameState _currentState = GameState.MainMenu;
         private float _gameOverTimer = 0f;
-        private const float GAME_OVER_DELAY = 2f; // Show game over for 2 seconds before allowing restart
         private float _victoryTimer = 0f;
-        private const float VICTORY_DISPLAY_TIME = 5f; // Show victory screen for 5 seconds
 
         private Texture2D _levelTexture;
         private Texture2D _startPageTexture;
@@ -36,11 +34,9 @@ namespace fire_and_ice
 
         // Main Menu State
         private int _selectedMenuOption = 0; // 0 = Start, 1 = Exit
-        private const int MENU_OPTIONS_COUNT = 2;
 
         // Pause Menu State
         private int _selectedPauseOption = 0; // 0 = Resume, 1 = Exit
-        private const int PAUSE_OPTIONS_COUNT = 2;
 
         private Player _player;
         private Player _player2; // Second player (blue)
@@ -122,7 +118,7 @@ namespace fire_and_ice
             }
 
             // Player 1 - Original (white/default color) - WASD + Space controls
-            _player = new Player(heroTexture, new Vector2(85, 270));
+            _player = new Player(heroTexture, GameConstants.SpawnPositions.Player1Start);
             _player.Type = PlayerType.Fire; // Fire character
             _player.PlayerColor = Color.White;
             _player.MoveLeftKey = Keys.A;
@@ -132,7 +128,7 @@ namespace fire_and_ice
             _player.JumpKey3 = Keys.None; // Not used
 
             // Player 2 - Ice character, spawns in opposite corner (right side) - Arrow keys
-            _player2 = new Player(character2Texture, new Vector2(700, 270)); // 4 frames (default)
+            _player2 = new Player(character2Texture, GameConstants.SpawnPositions.Player2Start); // 4 frames (default)
             _player2.Type = PlayerType.Ice; // Ice character
             _player2.PlayerColor = Color.White; // No color tinting needed
             _player2.MoveLeftKey = Keys.Left;
@@ -142,12 +138,12 @@ namespace fire_and_ice
             _player2.JumpKey3 = Keys.RightShift;
 
             // Initialize keys - spawn at specific locations
-            _key1 = new Key(new Vector2(65, 315)); // Left upper corner of left wooden crate
-            _key2 = new Key(new Vector2(625, 305)); // On right wooden crate
+            _key1 = new Key(GameConstants.SpawnPositions.Key1Position); // Left upper corner of left wooden crate
+            _key2 = new Key(GameConstants.SpawnPositions.Key2Position); // On right wooden crate
 
             // Initialize doors at top of map (matching green rectangles)
-            _door1 = new Door(new Vector2(5, 65)); // Top left corner door (moved up 30px, left 5px)
-            _door2 = new Door(new Vector2(737, 65)); // Top right corner door (moved up 30px, left 5px)
+            _door1 = new Door(GameConstants.SpawnPositions.Door1Position); // Top left corner door (moved up 30px, left 5px)
+            _door2 = new Door(GameConstants.SpawnPositions.Door2Position); // Top right corner door (moved up 30px, left 5px)
 
             // Initialize flames for all fire hazards
             _flames = new List<Flame>();
@@ -312,7 +308,7 @@ namespace fire_and_ice
             System.Diagnostics.Debug.WriteLine($"GameOver Update - Timer: {_gameOverTimer:F2}s");
 
             // Allow restart after delay
-            if (_gameOverTimer >= GAME_OVER_DELAY)
+            if (_gameOverTimer >= GameConstants.GameState.GameOverDelay)
             {
                 if (keyboardState.IsKeyDown(Keys.Enter) || keyboardState.IsKeyDown(Keys.Space))
                 {
@@ -329,7 +325,7 @@ namespace fire_and_ice
             System.Diagnostics.Debug.WriteLine($"Victory Update - Timer: {_victoryTimer:F2}s");
 
             // After display time, return to main menu
-            if (_victoryTimer >= VICTORY_DISPLAY_TIME)
+            if (_victoryTimer >= GameConstants.GameState.VictoryDisplayTime)
             {
                 System.Diagnostics.Debug.WriteLine("Victory timer complete - Returning to main menu");
                 _currentState = GameState.MainMenu;
@@ -348,13 +344,13 @@ namespace fire_and_ice
             if ((keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S)) &&
                 !_previousKeyboardState.IsKeyDown(Keys.Down) && !_previousKeyboardState.IsKeyDown(Keys.S))
             {
-                _selectedMenuOption = (_selectedMenuOption + 1) % MENU_OPTIONS_COUNT;
+                _selectedMenuOption = (_selectedMenuOption + 1) % GameConstants.Menu.MainMenuOptionsCount;
             }
 
             if ((keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W)) &&
                 !_previousKeyboardState.IsKeyDown(Keys.Up) && !_previousKeyboardState.IsKeyDown(Keys.W))
             {
-                _selectedMenuOption = (_selectedMenuOption - 1 + MENU_OPTIONS_COUNT) % MENU_OPTIONS_COUNT;
+                _selectedMenuOption = (_selectedMenuOption - 1 + GameConstants.Menu.MainMenuOptionsCount) % GameConstants.Menu.MainMenuOptionsCount;
             }
 
             // Select option with Enter or Space
@@ -385,13 +381,13 @@ namespace fire_and_ice
             if ((keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S)) &&
                 !_previousKeyboardState.IsKeyDown(Keys.Down) && !_previousKeyboardState.IsKeyDown(Keys.S))
             {
-                _selectedPauseOption = (_selectedPauseOption + 1) % PAUSE_OPTIONS_COUNT;
+                _selectedPauseOption = (_selectedPauseOption + 1) % GameConstants.Menu.PauseMenuOptionsCount;
             }
 
             if ((keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W)) &&
                 !_previousKeyboardState.IsKeyDown(Keys.Up) && !_previousKeyboardState.IsKeyDown(Keys.W))
             {
-                _selectedPauseOption = (_selectedPauseOption - 1 + PAUSE_OPTIONS_COUNT) % PAUSE_OPTIONS_COUNT;
+                _selectedPauseOption = (_selectedPauseOption - 1 + GameConstants.Menu.PauseMenuOptionsCount) % GameConstants.Menu.PauseMenuOptionsCount;
             }
 
             // Select option with Enter or Space
@@ -422,14 +418,14 @@ namespace fire_and_ice
             System.Diagnostics.Debug.WriteLine("=== RESTARTING GAME ===");
 
             // Reset players completely
-            _player.Reset(new Vector2(85, 270));
-            _player2.Reset(new Vector2(700, 270));
+            _player.Reset(GameConstants.SpawnPositions.Player1Start);
+            _player2.Reset(GameConstants.SpawnPositions.Player2Start);
 
             System.Diagnostics.Debug.WriteLine($"Players reset - P1: {_player.Health}HP, P2: {_player2.Health}HP");
 
             // Reset keys and doors
-            _key1 = new Key(new Vector2(65, 315)); // Left upper corner of left wooden crate
-            _key2 = new Key(new Vector2(625, 305)); // On right wooden crate
+            _key1 = new Key(GameConstants.SpawnPositions.Key1Position); // Left upper corner of left wooden crate
+            _key2 = new Key(GameConstants.SpawnPositions.Key2Position); // On right wooden crate
             _door1.Reset();
             _door2.Reset();
             _doorsOpening = false;
@@ -475,22 +471,20 @@ namespace fire_and_ice
 
         private void DrawHealthBar(Player player, string label, Color textColor, int yPosition)
         {
-            const int HEALTH_BAR_WIDTH = 150;
-            const int HEALTH_BAR_HEIGHT = 20;
-            int healthBarX = GraphicsDevice.Viewport.Width - HEALTH_BAR_WIDTH - 10;
+            int healthBarX = GraphicsDevice.Viewport.Width - GameConstants.UI.HealthBarWidth - GameConstants.UI.HealthBarMargin;
             int healthBarY = yPosition;
 
             // Draw background (max health)
             _spriteBatch.Draw(_pixelTexture,
-                new Rectangle(healthBarX, healthBarY, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT),
-                Color.DarkRed * 0.7f);
+                new Rectangle(healthBarX, healthBarY, GameConstants.UI.HealthBarWidth, GameConstants.UI.HealthBarHeight),
+                Color.DarkRed * GameConstants.Opacity.High);
 
             // Draw current health
-            int currentHealthWidth = (int)(HEALTH_BAR_WIDTH * (player.Health / player.MaxHealth));
+            int currentHealthWidth = (int)(GameConstants.UI.HealthBarWidth * (player.Health / player.MaxHealth));
             Color healthColor = player.Health > 50 ? Color.Green :
                                (player.Health > 25 ? Color.Yellow : Color.Red);
             _spriteBatch.Draw(_pixelTexture,
-                new Rectangle(healthBarX, healthBarY, currentHealthWidth, HEALTH_BAR_HEIGHT),
+                new Rectangle(healthBarX, healthBarY, currentHealthWidth, GameConstants.UI.HealthBarHeight),
                 healthColor);
 
             // Draw health text
@@ -499,7 +493,7 @@ namespace fire_and_ice
                 string healthText = $"{label}: {player.Health:F0}/{player.MaxHealth:F0}";
                 Vector2 textSize = _debugFont.MeasureString(healthText);
                 _spriteBatch.DrawString(_debugFont, healthText,
-                    new Vector2(healthBarX + HEALTH_BAR_WIDTH / 2 - textSize.X / 2, healthBarY + 2),
+                    new Vector2(healthBarX + GameConstants.UI.HealthBarWidth / 2 - textSize.X / 2, healthBarY + 2),
                     textColor);
             }
         }
@@ -509,9 +503,8 @@ namespace fire_and_ice
             if ((_key1.IsCollected && _key1.PlayerOwner == playerNumber) ||
                 (_key2.IsCollected && _key2.PlayerOwner == playerNumber))
             {
-                const int HEALTH_BAR_WIDTH = 150;
-                int healthBarX = GraphicsDevice.Viewport.Width - HEALTH_BAR_WIDTH - 10;
-                Vector2 keyIconPos = new Vector2(healthBarX - 30, yPosition);
+                int healthBarX = GraphicsDevice.Viewport.Width - GameConstants.UI.HealthBarWidth - GameConstants.UI.HealthBarMargin;
+                Vector2 keyIconPos = new Vector2(healthBarX - GameConstants.UI.KeyIconOffset, yPosition);
                 _key1.DrawIcon(_spriteBatch, _pixelTexture, keyIconPos);
             }
         }
@@ -591,11 +584,11 @@ namespace fire_and_ice
             }
 
             // Draw health bars and key icons
-            DrawHealthBar(_player, "P1", Color.White, 10);
-            DrawPlayerKeyIcon(1, 10);
+            DrawHealthBar(_player, "P1", Color.White, GameConstants.UI.Player1HealthY);
+            DrawPlayerKeyIcon(1, GameConstants.UI.Player1HealthY);
 
-            DrawHealthBar(_player2, "P2", Color.Cyan, 35);
-            DrawPlayerKeyIcon(2, 35);
+            DrawHealthBar(_player2, "P2", Color.Cyan, GameConstants.UI.Player2HealthY);
+            DrawPlayerKeyIcon(2, GameConstants.UI.Player2HealthY);
 
             // Controls display (always shown)
             if (_debugFont != null)
@@ -688,7 +681,7 @@ namespace fire_and_ice
                     Color.Black, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
 
                 // Draw restart prompt after delay (below the modal window)
-                if (_gameOverTimer >= GAME_OVER_DELAY)
+                if (_gameOverTimer >= GameConstants.GameState.GameOverDelay)
                 {
                     string restartText = "Press ENTER or SPACE to Restart";
                     Vector2 restartSize = _debugFont.MeasureString(restartText);
