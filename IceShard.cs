@@ -1,95 +1,132 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using fire_and_ice.Core;
 
 namespace fire_and_ice
 {
     /// <summary>
-    /// Represents an animated ice shard effect for ice hazards
+    /// Represents an animated ice shard effect for ice hazards.
+    /// Features crystalline appearance with glowing and shimmering effects.
     /// </summary>
-    public class IceShard
+    public class IceShard : AnimatedObject
     {
-        public Rectangle Bounds { get; set; }
-        private float _animationTimer = 0f;
-        private float _glowTimer = 0f;
-        private float _currentIntensity = 1f;
-        private Random _random = new Random();
+        private Texture2D _pixelTexture;
 
         // Ice animation parameters
         private const float GLOW_SPEED = 2f;
         private const float SHIMMER_SPEED = 5f;
 
-        public IceShard(Rectangle bounds)
+        /// <summary>
+        /// Creates a new ice shard effect at the specified bounds
+        /// </summary>
+        /// <param name="bounds">The area where the ice shard should be displayed</param>
+        public IceShard(Rectangle bounds) : base(bounds)
         {
-            Bounds = bounds;
-            _animationTimer = (float)_random.NextDouble() * MathF.PI * 2; // Random start phase
+            // Base class already initializes AnimationTimer with random phase
         }
 
-        public void Update(GameTime gameTime)
+        /// <summary>
+        /// Sets the pixel texture used for rendering the ice shard
+        /// </summary>
+        /// <param name="pixelTexture">A 1x1 white pixel texture for drawing shapes</param>
+        public void SetPixelTexture(Texture2D pixelTexture)
+        {
+            _pixelTexture = pixelTexture;
+        }
+
+        /// <summary>
+        /// Updates the ice shard animation timers and intensity.
+        /// Creates a glowing/shimmering effect by combining sine waves.
+        /// </summary>
+        /// <param name="gameTime">Provides a snapshot of timing values</param>
+        protected override void UpdateAnimation(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            _animationTimer += deltaTime * GLOW_SPEED;
-            _glowTimer += deltaTime * SHIMMER_SPEED;
+            // Update primary and secondary timers
+            AnimationTimer += deltaTime * GLOW_SPEED;
+            SecondaryTimer += deltaTime * SHIMMER_SPEED;
 
             // Create subtle glowing/shimmering effect
-            float glow = (float)Math.Sin(_animationTimer);
-            float shimmer = (float)Math.Sin(_glowTimer) * 0.2f;
+            float glow = CalculateSineWave(AnimationTimer);
+            float shimmer = CalculateSineWave(SecondaryTimer) * GameConstants.IceShard.ShimmerIntensity;
 
-            _currentIntensity = 0.8f + (glow * 0.15f) + shimmer;
-            _currentIntensity = MathHelper.Clamp(_currentIntensity, 0.7f, 1.0f);
+            // Calculate intensity using base class helper
+            CurrentIntensity = CalculateIntensity(
+                GameConstants.IceShard.BaseIntensity,
+                GameConstants.IceShard.GlowIntensity,
+                glow
+            ) + shimmer;
+
+            // Clamp to valid range
+            CurrentIntensity = Clamp(CurrentIntensity, GameConstants.IceShard.MinIntensity, GameConstants.IceShard.MaxIntensity);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Texture2D pixelTexture)
+        /// <summary>
+        /// Draws the ice shard effect to the screen.
+        /// Renders multiple crystalline layers with glowing and shimmering effects.
+        /// </summary>
+        /// <param name="spriteBatch">The sprite batch to draw with</param>
+        public override void Draw(SpriteBatch spriteBatch)
         {
+            if (_pixelTexture == null)
+                return;
+
             int centerX = Bounds.X + Bounds.Width / 2;
             int bottomY = Bounds.Y + Bounds.Height;
 
             // Draw ice shard as a crystalline spike pointing upward
             // Base layer - outer dark cyan
-            DrawShardLayer(spriteBatch, pixelTexture, centerX, bottomY,
-                Bounds.Width, Bounds.Height,
-                new Color(0, 100, 150), _currentIntensity * 0.7f);
+            DrawShardLayer(spriteBatch, centerX, bottomY,
+                (int)(Bounds.Width * GameConstants.IceShard.OuterLayerWidth),
+                (int)(Bounds.Height * GameConstants.IceShard.OuterLayerHeight),
+                new Color(0, 100, 150), CurrentIntensity * GameConstants.Opacity.High);
 
             // Middle layer - cyan
-            DrawShardLayer(spriteBatch, pixelTexture, centerX, bottomY,
-                (int)(Bounds.Width * 0.7f), (int)(Bounds.Height * 0.9f),
-                Color.Cyan, _currentIntensity * 0.85f);
+            DrawShardLayer(spriteBatch, centerX, bottomY,
+                (int)(Bounds.Width * GameConstants.IceShard.MiddleLayerWidth),
+                (int)(Bounds.Height * GameConstants.IceShard.MiddleLayerHeight),
+                Color.Cyan, CurrentIntensity * 0.85f);
 
             // Inner layer - light cyan
-            DrawShardLayer(spriteBatch, pixelTexture, centerX, bottomY,
-                (int)(Bounds.Width * 0.5f), (int)(Bounds.Height * 0.75f),
-                Color.LightCyan, _currentIntensity * 0.95f);
+            DrawShardLayer(spriteBatch, centerX, bottomY,
+                (int)(Bounds.Width * GameConstants.IceShard.InnerLayerWidth),
+                (int)(Bounds.Height * GameConstants.IceShard.InnerLayerHeight),
+                Color.LightCyan, CurrentIntensity * 0.95f);
 
             // Core - bright white
-            DrawShardLayer(spriteBatch, pixelTexture, centerX, bottomY,
-                (int)(Bounds.Width * 0.3f), (int)(Bounds.Height * 0.6f),
-                Color.White, _currentIntensity);
+            DrawShardLayer(spriteBatch, centerX, bottomY,
+                (int)(Bounds.Width * GameConstants.IceShard.CoreLayerWidth),
+                (int)(Bounds.Height * GameConstants.IceShard.CoreLayerHeight),
+                Color.White, CurrentIntensity);
 
             // Add sparkle effect at tip
-            float sparkle = (float)Math.Sin(_glowTimer * 2) * 0.5f + 0.5f;
-            if (sparkle > 0.7f)
+            float sparkle = CalculateSineWave(SecondaryTimer, 2f) * 0.5f + 0.5f;
+            if (sparkle > GameConstants.IceShard.SparkleThreshold)
             {
-                int sparkleSize = 4;
                 Rectangle sparkleTip = new Rectangle(
-                    centerX - sparkleSize / 2,
-                    Bounds.Y + (int)(Bounds.Height * 0.2f),
-                    sparkleSize,
-                    sparkleSize
+                    centerX - GameConstants.IceShard.SparkleSize / 2,
+                    Bounds.Y + (int)(Bounds.Height * GameConstants.IceShard.SparkleTipOffset),
+                    GameConstants.IceShard.SparkleSize,
+                    GameConstants.IceShard.SparkleSize
                 );
-                spriteBatch.Draw(pixelTexture, sparkleTip, Color.White * sparkle);
+                spriteBatch.Draw(_pixelTexture, sparkleTip, Color.White * sparkle);
             }
 
             // Add shimmer lines on sides
-            DrawShimmerLine(spriteBatch, pixelTexture, centerX - (int)(Bounds.Width * 0.3f), Bounds.Y, Bounds.Height);
-            DrawShimmerLine(spriteBatch, pixelTexture, centerX + (int)(Bounds.Width * 0.3f), Bounds.Y, Bounds.Height);
+            DrawShimmerLine(spriteBatch, centerX - (int)(Bounds.Width * GameConstants.IceShard.ShimmerSideOffset), Bounds.Y, Bounds.Height);
+            DrawShimmerLine(spriteBatch, centerX + (int)(Bounds.Width * GameConstants.IceShard.ShimmerSideOffset), Bounds.Y, Bounds.Height);
         }
 
-        private void DrawShardLayer(SpriteBatch spriteBatch, Texture2D pixelTexture,
+        /// <summary>
+        /// Draws a single layer of the ice shard with crystalline taper
+        /// </summary>
+        private void DrawShardLayer(SpriteBatch spriteBatch,
             int centerX, int bottomY, int width, int height, Color color, float alpha)
         {
             // Draw crystalline spike - wide at bottom, narrow at top
-            int steps = height / 2;
+            int steps = height / GameConstants.IceShard.SegmentHeight;
             for (int y = 0; y < steps; y++)
             {
                 float progress = (float)y / steps;
@@ -98,7 +135,7 @@ namespace fire_and_ice
                 float widthMultiplier = 1.0f - progress;
 
                 int currentWidth = (int)(width * widthMultiplier);
-                int currentY = bottomY - (y * 2);
+                int currentY = bottomY - (y * GameConstants.IceShard.SegmentHeight);
 
                 if (currentWidth > 0)
                 {
@@ -106,37 +143,39 @@ namespace fire_and_ice
                         centerX - currentWidth / 2,
                         currentY,
                         currentWidth,
-                        2
+                        GameConstants.IceShard.SegmentHeight
                     );
 
                     // Consistent opacity throughout
-                    float segmentAlpha = alpha * 0.95f;
+                    float segmentAlpha = alpha * GameConstants.Opacity.AlmostOpaque;
 
-                    spriteBatch.Draw(pixelTexture, segment, color * segmentAlpha);
+                    spriteBatch.Draw(_pixelTexture, segment, color * segmentAlpha);
                 }
             }
 
             // Add sharp pointed tip
-            int tipHeight = (int)(height * 0.15f);
+            int tipHeight = (int)(height * GameConstants.IceShard.TipHeightMultiplier);
             for (int y = 0; y < tipHeight; y++)
             {
                 float tipProgress = (float)y / tipHeight;
-                int tipY = Bounds.Y + (int)(height * 0.15f) + y;
-                int tipWidth = Math.Max(1, (int)(width * 0.2f * (1.0f - tipProgress)));
+                int tipY = Bounds.Y + (int)(height * GameConstants.IceShard.TipHeightMultiplier) + y;
+                int tipWidth = Math.Max(1, (int)(width * GameConstants.IceShard.TipWidthMultiplier * (1.0f - tipProgress)));
 
                 Rectangle tip = new Rectangle(centerX - tipWidth / 2, tipY, tipWidth, 1);
-                spriteBatch.Draw(pixelTexture, tip, color * (alpha * 0.9f));
+                spriteBatch.Draw(_pixelTexture, tip, color * (alpha * GameConstants.Opacity.VeryHigh));
             }
         }
 
-        private void DrawShimmerLine(SpriteBatch spriteBatch, Texture2D pixelTexture,
-            int x, int startY, int height)
+        /// <summary>
+        /// Draws a shimmering line on the side of the ice shard
+        /// </summary>
+        private void DrawShimmerLine(SpriteBatch spriteBatch, int x, int startY, int height)
         {
-            float shimmer = (float)Math.Sin(_glowTimer + x * 0.1f) * 0.3f + 0.4f;
-            int lineHeight = (int)(height * 0.6f);
+            float shimmer = CalculateSineWave(SecondaryTimer + x * 0.1f) * 0.3f + 0.4f;
+            int lineHeight = (int)(height * GameConstants.IceShard.ShimmerLineHeight);
 
             Rectangle line = new Rectangle(x, startY + height - lineHeight, 1, lineHeight);
-            spriteBatch.Draw(pixelTexture, line, Color.White * (shimmer * _currentIntensity * 0.6f));
+            spriteBatch.Draw(_pixelTexture, line, Color.White * (shimmer * CurrentIntensity * GameConstants.Opacity.MediumHigh));
         }
     }
 }

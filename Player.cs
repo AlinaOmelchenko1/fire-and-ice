@@ -3,16 +3,24 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using fire_and_ice.Interfaces;
 
 namespace fire_and_ice
 {
+    /// <summary>
+    /// Defines the player character type (Fire or Ice)
+    /// </summary>
     public enum PlayerType
     {
         Fire,
         Ice
     }
 
-    public class Player
+    /// <summary>
+    /// Represents a player character with physics, animation, input handling, and collision detection.
+    /// Supports different player types (Fire/Ice) with type-specific hazard interactions.
+    /// </summary>
+    public class Player : IGameObject, ICollidable
     {
         // Player type (Fire or Ice)
         public PlayerType Type { get; set; } = PlayerType.Fire;
@@ -21,10 +29,10 @@ namespace fire_and_ice
         private Texture2D texture;
         private int frameWidth;
         private int frameHeight;
-        private int frameCount = 4;
+        private int frameCount = GameConstants.Player.DefaultFrameCount;
         private int currentFrame;
         private double animationTimer;
-        private double animationInterval = 0.15;
+        private double animationInterval = GameConstants.Player.AnimationInterval;
 
         // Player color
         public Color PlayerColor { get; set; } = Color.White;
@@ -46,34 +54,27 @@ namespace fire_and_ice
         public Keys JumpKey3 { get; set; } = Keys.Up;
 
         // Public tunables
-        public float Gravity { get; set; } = 800f;
-        public float JumpPower { get; set; } = 400f;
-        public float MoveSpeed { get; set; } = 200f; // kept for compatibility
+        public float Gravity { get; set; } = GameConstants.Physics.Gravity;
+        public float JumpPower { get; set; } = GameConstants.Physics.JumpPower;
+        public float MoveSpeed { get; set; } = GameConstants.Physics.MaxRunSpeed; // kept for compatibility
         public bool IsOnGround { get; set; }
-        public int HitboxOffsetX { get; set; } = 28;
-        public int HitboxOffsetY { get; set; } = 16;
+        public int HitboxOffsetX { get; set; } = GameConstants.Player.HitboxOffsetX;
+        public int HitboxOffsetY { get; set; } = GameConstants.Player.HitboxOffsetY;
 
         // Health system
-        public float Health { get; private set; } = 100f;
-        public float MaxHealth { get; set; } = 100f;
+        public float Health { get; private set; } = GameConstants.Player.DefaultHealth;
+        public float MaxHealth { get; set; } = GameConstants.Player.DefaultHealth;
         public bool IsAlive => Health > 0f;
         private float _damageCooldown = 0f;
-        private const float DAMAGE_COOLDOWN_TIME = 0.5f; // Half second invincibility after hit
         public bool IsInvincible => _damageCooldown > 0f;
 
         // Surface interaction modifiers
         private float _currentFrictionMultiplier = 1f;
         private SurfaceType _currentSurfaceType = SurfaceType.Empty;
         private float _bounceCooldown = 0f;
-        private const float BOUNCE_COOLDOWN_TIME = 0.3f; // Prevent immediate re-bounce
-        private const float MIN_BOUNCE_VELOCITY = 50f; // Minimum falling speed required to trigger bounce
 
         // Movement smoothing / coyote
         private float coyoteTimer = 0f;
-        private const float COYOTE_TIME = 0.1f; // 100 ms forgiveness
-        private const float ACCELERATION = 2000f;
-        private const float DECELERATION = 2500f;
-        private const float MAX_RUN_SPEED = 200f;
 
         // Animation helper
         private bool isMoving;
@@ -106,6 +107,9 @@ namespace fire_and_ice
             inputJump = false;
         }
 
+        /// <summary>
+        /// Gets the player's collision hitbox (smaller than sprite bounds)
+        /// </summary>
         public Rectangle GetHitbox()
         {
             return new Rectangle(
@@ -116,6 +120,39 @@ namespace fire_and_ice
             );
         }
 
+        /// <summary>
+        /// Gets the bounds for collision detection (ICollidable interface implementation)
+        /// </summary>
+        public Rectangle GetBounds()
+        {
+            return GetHitbox();
+        }
+
+        /// <summary>
+        /// Checks collision with another collidable object (ICollidable interface implementation)
+        /// </summary>
+        public bool CheckCollision(ICollidable other)
+        {
+            return GetBounds().Intersects(other.GetBounds());
+        }
+
+        /// <summary>
+        /// Main update method (IGameObject interface implementation)
+        /// Note: For Player, input and physics are separated and called externally by Game1
+        /// to support different control schemes and collision systems
+        /// </summary>
+        public void Update(GameTime gameTime)
+        {
+            // For Player class, Update, Physics, and Animation are kept separate
+            // to allow Game1 to control the update order and collision system
+            // This method exists to satisfy IGameObject but delegates to specialized methods
+            UpdateAnimation(gameTime);
+        }
+
+        /// <summary>
+        /// Processes keyboard input for player movement and jumping
+        /// </summary>
+        /// <param name="keyboardState">Current keyboard state</param>
         public void ProcessInput(KeyboardState keyboardState)
         {
             inputMoveX = 0;
@@ -137,6 +174,11 @@ namespace fire_and_ice
             wasJumpPressed = jumpPressed;
         }
 
+        /// <summary>
+        /// Updates player physics including movement, gravity, jumping, and collisions
+        /// </summary>
+        /// <param name="deltaTime">Time elapsed since last update in seconds</param>
+        /// <param name="screenWidth">Width of the game screen for boundary clamping</param>
         public void UpdatePhysics(float deltaTime, int screenWidth)
         {
             // --- DAMAGE COOLDOWN ---
@@ -149,19 +191,19 @@ namespace fire_and_ice
 
             // --- COYOTE TIME HANDLING ---
             if (IsOnGround)
-                coyoteTimer = COYOTE_TIME;
+                coyoteTimer = GameConstants.Physics.CoyoteTime;
             else
                 coyoteTimer -= deltaTime;
 
             // --- HORIZONTAL MOVEMENT (acceleration / deceleration with surface friction) ---
-            float effectiveAcceleration = ACCELERATION * _currentFrictionMultiplier;
-            float effectiveDeceleration = DECELERATION * _currentFrictionMultiplier;
+            float effectiveAcceleration = GameConstants.Physics.Acceleration * _currentFrictionMultiplier;
+            float effectiveDeceleration = GameConstants.Physics.Deceleration * _currentFrictionMultiplier;
 
             if (inputMoveX != 0)
             {
                 velocity.X += inputMoveX * effectiveAcceleration * deltaTime;
-                if (Math.Abs(velocity.X) > MAX_RUN_SPEED)
-                    velocity.X = Math.Sign(velocity.X) * MAX_RUN_SPEED;
+                if (Math.Abs(velocity.X) > GameConstants.Physics.MaxRunSpeed)
+                    velocity.X = Math.Sign(velocity.X) * GameConstants.Physics.MaxRunSpeed;
             }
             else
             {
@@ -190,8 +232,8 @@ namespace fire_and_ice
             if (!IsOnGround)
             {
                 velocity.Y += Gravity * deltaTime;
-                if (velocity.Y > 1000f)
-                    velocity.Y = 1000f;
+                if (velocity.Y > GameConstants.Physics.MaxFallSpeed)
+                    velocity.Y = GameConstants.Physics.MaxFallSpeed;
             }
 
             // --- POSITION UPDATE ---
@@ -204,6 +246,10 @@ namespace fire_and_ice
             isMoving = (Math.Abs(velocity.X) > 1f) && IsOnGround;
         }
 
+        /// <summary>
+        /// Checks and resolves collisions with interactable objects (platforms, hazards, etc.)
+        /// </summary>
+        /// <param name="objects">List of interactable objects to check against</param>
         public void CheckCollisions(List<InteractableObject> objects)
         {
             IsOnGround = false;
@@ -257,7 +303,7 @@ namespace fire_and_ice
                             // Only bounce if: 1) cooldown expired, 2) was actually falling with sufficient speed
                             if (interaction.BounceForce > 0f &&
                                 _bounceCooldown <= 0f &&
-                                landingVelocity >= MIN_BOUNCE_VELOCITY)
+                                landingVelocity >= GameConstants.Surface.MinBounceVelocity)
                             {
                                 shouldBounce = true;
                                 bounceForce = interaction.BounceForce;
@@ -295,7 +341,7 @@ namespace fire_and_ice
             {
                 velocity.Y = -bounceForce;
                 IsOnGround = false; // Player is launching, not on ground anymore
-                _bounceCooldown = BOUNCE_COOLDOWN_TIME; // Set cooldown to prevent immediate re-bounce
+                _bounceCooldown = GameConstants.Surface.BounceCooldownTime; // Set cooldown to prevent immediate re-bounce
             }
 
             // Ground stabilization: prevent micro-shaking
@@ -325,7 +371,7 @@ namespace fire_and_ice
                         ShouldApplyCollision = true,
                         DamageTaken = 0f,
                         VelocityModifier = Vector2.Zero,
-                        FrictionMultiplier = 0.2f, // Very slippery
+                        FrictionMultiplier = GameConstants.Surface.IceFriction,
                         BounceForce = 0f
                     };
 
@@ -335,7 +381,7 @@ namespace fire_and_ice
                         ShouldApplyCollision = true,
                         DamageTaken = 0f,
                         VelocityModifier = Vector2.Zero,
-                        FrictionMultiplier = 3f, // Hard to move
+                        FrictionMultiplier = GameConstants.Surface.StickyFriction,
                         BounceForce = 0f
                     };
 
@@ -345,18 +391,27 @@ namespace fire_and_ice
                         ShouldApplyCollision = true,
                         DamageTaken = 0f,
                         VelocityModifier = Vector2.Zero,
-                        FrictionMultiplier = 1f,
-                        BounceForce = 500f // Bounce up
+                        FrictionMultiplier = GameConstants.Surface.NormalFriction,
+                        BounceForce = GameConstants.Surface.BouncyForce
                     };
 
                 case SurfaceType.Fire:
+                    return new InteractionResult
+                    {
+                        ShouldApplyCollision = false, // Can walk through
+                        DamageTaken = obj.DamageAmount > 0 ? obj.DamageAmount : GameConstants.Damage.FireHazard,
+                        VelocityModifier = Vector2.Zero,
+                        FrictionMultiplier = GameConstants.Surface.NormalFriction,
+                        BounceForce = 0f
+                    };
+
                 case SurfaceType.Lava:
                     return new InteractionResult
                     {
                         ShouldApplyCollision = false, // Can walk through
-                        DamageTaken = obj.DamageAmount > 0 ? obj.DamageAmount : 10f,
+                        DamageTaken = obj.DamageAmount > 0 ? obj.DamageAmount : GameConstants.Damage.Lava,
                         VelocityModifier = Vector2.Zero,
-                        FrictionMultiplier = 1f,
+                        FrictionMultiplier = GameConstants.Surface.NormalFriction,
                         BounceForce = 0f
                     };
 
@@ -365,9 +420,9 @@ namespace fire_and_ice
                     return new InteractionResult
                     {
                         ShouldApplyCollision = false, // Can walk through
-                        DamageTaken = (Type == PlayerType.Fire) ? (obj.DamageAmount > 0 ? obj.DamageAmount : 10f) : 0f,
+                        DamageTaken = (Type == PlayerType.Fire) ? (obj.DamageAmount > 0 ? obj.DamageAmount : GameConstants.Damage.IceHazard) : 0f,
                         VelocityModifier = Vector2.Zero,
-                        FrictionMultiplier = 1f,
+                        FrictionMultiplier = GameConstants.Surface.NormalFriction,
                         BounceForce = 0f
                     };
 
@@ -376,9 +431,9 @@ namespace fire_and_ice
                     return new InteractionResult
                     {
                         ShouldApplyCollision = false,
-                        DamageTaken = obj.DamageAmount > 0 ? obj.DamageAmount : 25f,
+                        DamageTaken = obj.DamageAmount > 0 ? obj.DamageAmount : GameConstants.Damage.Spike,
                         VelocityModifier = Vector2.Zero,
-                        FrictionMultiplier = 1f,
+                        FrictionMultiplier = GameConstants.Surface.NormalFriction,
                         BounceForce = 0f
                     };
 
@@ -387,8 +442,8 @@ namespace fire_and_ice
                     {
                         ShouldApplyCollision = false,
                         DamageTaken = 0f,
-                        VelocityModifier = new Vector2(velocity.X * -0.5f, velocity.Y * -0.3f), // Slow down
-                        FrictionMultiplier = 0.5f,
+                        VelocityModifier = new Vector2(velocity.X * GameConstants.Water.HorizontalDrag, velocity.Y * GameConstants.Water.VerticalDrag),
+                        FrictionMultiplier = GameConstants.Water.FrictionMultiplier,
                         BounceForce = 0f
                     };
 
@@ -398,8 +453,9 @@ namespace fire_and_ice
         }
 
         /// <summary>
-        /// Apply damage to player
+        /// Apply damage to player with invincibility period
         /// </summary>
+        /// <param name="amount">Amount of damage to apply</param>
         public void TakeDamage(float amount)
         {
             if (IsInvincible || !IsAlive)
@@ -409,14 +465,15 @@ namespace fire_and_ice
             if (Health < 0f)
                 Health = 0f;
 
-            _damageCooldown = DAMAGE_COOLDOWN_TIME;
+            _damageCooldown = GameConstants.Player.DamageCooldownTime;
 
             System.Diagnostics.Debug.WriteLine($"Player took {amount} damage! Health: {Health}/{MaxHealth}");
         }
 
         /// <summary>
-        /// Heal player
+        /// Heals the player by the specified amount
         /// </summary>
+        /// <param name="amount">Amount of health to restore</param>
         public void Heal(float amount)
         {
             Health += amount;
@@ -425,7 +482,7 @@ namespace fire_and_ice
         }
 
         /// <summary>
-        /// Reset player health
+        /// Resets player health to maximum and clears damage cooldown
         /// </summary>
         public void ResetHealth()
         {
@@ -434,8 +491,9 @@ namespace fire_and_ice
         }
 
         /// <summary>
-        /// Reset all player state (position, velocity, health)
+        /// Resets all player state to initial values (position, velocity, health, cooldowns)
         /// </summary>
+        /// <param name="spawnPosition">Position to spawn the player at</param>
         public void Reset(Vector2 spawnPosition)
         {
             position = spawnPosition;
@@ -451,6 +509,10 @@ namespace fire_and_ice
             animationTimer = 0;
         }
 
+        /// <summary>
+        /// Updates the player's walking animation based on movement
+        /// </summary>
+        /// <param name="gameTime">Provides a snapshot of timing values</param>
         public void UpdateAnimation(GameTime gameTime)
         {
             if (isMoving)
@@ -471,6 +533,10 @@ namespace fire_and_ice
             }
         }
 
+        /// <summary>
+        /// Draws the player to the screen with animation and damage effects
+        /// </summary>
+        /// <param name="spriteBatch">The sprite batch to draw with</param>
         public void Draw(SpriteBatch spriteBatch)
         {
             Rectangle sourceRect = new Rectangle(currentFrame * frameWidth, 0, frameWidth, frameHeight);
@@ -480,26 +546,39 @@ namespace fire_and_ice
             Color drawColor = IsInvincible ? Color.Red : PlayerColor;
 
             // Flash effect - alternate visibility when invincible
-            if (IsInvincible && ((int)(_damageCooldown * 20) % 2 == 0))
-                drawColor = PlayerColor * 0.5f;
+            if (IsInvincible && ((int)(_damageCooldown * GameConstants.Player.InvincibilityFlashRate) % 2 == 0))
+                drawColor = PlayerColor * GameConstants.Opacity.Medium;
 
             spriteBatch.Draw(texture, drawPos, sourceRect, drawColor);
         }
 
+        /// <summary>
+        /// Draws debug information (hitbox, sprite bounds, ground indicator)
+        /// </summary>
+        /// <param name="spriteBatch">The sprite batch to draw with</param>
+        /// <param name="pixel">A 1x1 white pixel texture for drawing shapes</param>
         public void DrawDebug(SpriteBatch spriteBatch, Texture2D pixel)
         {
+            // Draw hitbox in red
             Rectangle hitbox = GetHitbox();
-            spriteBatch.Draw(pixel, hitbox, Color.Red * 0.5f);
+            spriteBatch.Draw(pixel, hitbox, Color.Red * GameConstants.Opacity.Medium);
 
+            // Draw sprite bounds in yellow
             Rectangle spriteBounds = new Rectangle((int)position.X, (int)position.Y, frameWidth, frameHeight);
-            int t = 2;
-            spriteBatch.Draw(pixel, new Rectangle(spriteBounds.X, spriteBounds.Y, spriteBounds.Width, t), Color.Yellow);
-            spriteBatch.Draw(pixel, new Rectangle(spriteBounds.X, spriteBounds.Bottom - t, spriteBounds.Width, t), Color.Yellow);
-            spriteBatch.Draw(pixel, new Rectangle(spriteBounds.X, spriteBounds.Y, t, spriteBounds.Height), Color.Yellow);
-            spriteBatch.Draw(pixel, new Rectangle(spriteBounds.Right - t, spriteBounds.Y, t, spriteBounds.Height), Color.Yellow);
+            int thickness = GameConstants.Debug.HitboxBorderThickness;
+            spriteBatch.Draw(pixel, new Rectangle(spriteBounds.X, spriteBounds.Y, spriteBounds.Width, thickness), Color.Yellow);
+            spriteBatch.Draw(pixel, new Rectangle(spriteBounds.X, spriteBounds.Bottom - thickness, spriteBounds.Width, thickness), Color.Yellow);
+            spriteBatch.Draw(pixel, new Rectangle(spriteBounds.X, spriteBounds.Y, thickness, spriteBounds.Height), Color.Yellow);
+            spriteBatch.Draw(pixel, new Rectangle(spriteBounds.Right - thickness, spriteBounds.Y, thickness, spriteBounds.Height), Color.Yellow);
 
+            // Draw ground indicator (green when on ground, red when in air)
             Color groundColor = IsOnGround ? Color.Lime : Color.Red;
-            Rectangle groundIndicator = new Rectangle((int)position.X + frameWidth / 2 - 5, (int)position.Y - 10, 10, 10);
+            Rectangle groundIndicator = new Rectangle(
+                (int)position.X + frameWidth / 2 + GameConstants.Debug.GroundIndicatorOffsetX,
+                (int)position.Y + GameConstants.Debug.GroundIndicatorOffsetY,
+                GameConstants.Debug.GroundIndicatorSize,
+                GameConstants.Debug.GroundIndicatorSize
+            );
             spriteBatch.Draw(pixel, groundIndicator, groundColor);
         }
 

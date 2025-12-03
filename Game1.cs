@@ -159,7 +159,9 @@ namespace fire_and_ice
             {
                 if (platform.Type == SurfaceType.Fire)
                 {
-                    _flames.Add(new Flame(platform.Bounds));
+                    var flame = new Flame(platform.Bounds);
+                    flame.SetPixelTexture(_pixelTexture);
+                    _flames.Add(flame);
                 }
             }
 
@@ -169,7 +171,9 @@ namespace fire_and_ice
             {
                 if (platform.Type == SurfaceType.IceHazard)
                 {
-                    _iceShards.Add(new IceShard(platform.Bounds));
+                    var iceShard = new IceShard(platform.Bounds);
+                    iceShard.SetPixelTexture(_pixelTexture);
+                    _iceShards.Add(iceShard);
                 }
             }
 
@@ -566,13 +570,13 @@ namespace fire_and_ice
             // Draw animated flames
             foreach (var flame in _flames)
             {
-                flame.Draw(_spriteBatch, _pixelTexture);
+                flame.Draw(_spriteBatch);
             }
 
             // Draw animated ice shards
             foreach (var iceShard in _iceShards)
             {
-                iceShard.Draw(_spriteBatch, _pixelTexture);
+                iceShard.Draw(_spriteBatch);
             }
 
             // Draw keys
@@ -906,13 +910,13 @@ namespace fire_and_ice
             // Draw animated flames
             foreach (var flame in _flames)
             {
-                flame.Draw(_spriteBatch, _pixelTexture);
+                flame.Draw(_spriteBatch);
             }
 
             // Draw animated ice shards
             foreach (var iceShard in _iceShards)
             {
-                iceShard.Draw(_spriteBatch, _pixelTexture);
+                iceShard.Draw(_spriteBatch);
             }
 
             // Draw keys
