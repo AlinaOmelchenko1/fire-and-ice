@@ -258,10 +258,33 @@
   - Comprehensive XML documentation for all members
 - [x] Build passed with 0 errors, 0 warnings
 
-#### Step 4.3: Extract Main Menu State
-- [ ] Create `States/MainMenuState.cs`
-- [ ] Move main menu logic from Game1
-- [ ] Move main menu rendering from Game1
+#### Step 4.3: Extract Main Menu State ✅ COMPLETED
+- [x] Create `States/MainMenuState.cs` - **DONE**
+  - Inherits from BaseGameState
+  - Holds menu state (_selectedMenuOption, menu options array)
+  - Uses Action<GameState> callback for state transitions
+  - Uses Action callback for exiting the game
+  - Accepts required textures and font in constructor
+- [x] Move main menu logic from Game1 - **DONE**
+  - Menu navigation with Up/Down or W/S keys
+  - Menu selection with Enter or Space
+  - Exit game with Escape key
+  - Option cycling with modulo arithmetic
+  - Extracted SelectCurrentOption() method for cleaner code
+- [x] Move main menu rendering from Game1 - **DONE**
+  - Background rendering with start page texture
+  - Semi-transparent menu background with border
+  - Menu options with selection highlighting
+  - Arrow indicator for selected option
+  - Text shadow for depth effect
+  - Controls hint at bottom of screen
+  - Uses GameConstants for all dimensions and values
+  - Split into helper methods: DrawMenuOptions() and DrawControlsHint()
+- [x] Add comprehensive XML documentation - **DONE**
+  - Class-level documentation
+  - Constructor parameter documentation
+  - Method documentation for all public and private methods
+- [x] Build passed with 0 errors, 0 warnings
 
 #### Step 4.4: Extract Playing State
 - [ ] Create `States/PlayingState.cs`
