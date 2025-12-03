@@ -348,10 +348,38 @@
   - Method documentation for all public and private methods
 - [x] Build passed with 0 errors, 0 warnings
 
-#### Step 4.6: Extract Paused State
-- [ ] Create `States/PausedState.cs`
-- [ ] Move pause logic from Game1
-- [ ] Move pause rendering from Game1
+#### Step 4.6: Extract Paused State ✅ COMPLETED
+- [x] Create `States/PausedState.cs` - **DONE**
+  - Inherits from BaseGameState
+  - Holds selected pause option (_selectedPauseOption)
+  - Uses Action<GameState> callback for state transitions
+  - Uses Action callback for exiting the game
+  - Accepts all game entities for background rendering (players, doors, keys, flames, ice shards)
+- [x] Move pause logic from Game1 - **DONE**
+  - Menu navigation with Up/Down or W/S keys
+  - Menu selection with Enter or Space
+  - Resume with Escape key (toggle pause)
+  - Option cycling with modulo arithmetic
+  - Extracted SelectCurrentOption() method for cleaner code
+- [x] Move pause rendering from Game1 - **DONE**
+  - Dimmed game world rendering (60% opacity)
+  - All game entities rendered frozen in place (doors, flames, ice shards, keys, players)
+  - Semi-transparent black overlay (50% opacity)
+  - Menu with semi-transparent background and cyan border
+  - "PAUSED" title in cyan with shadow effect
+  - Menu options with selection highlighting (yellow for selected, white for others)
+  - Arrow indicator for selected option
+  - Cyan highlight background for selection
+  - Text shadows for depth effect
+  - Controls hint at bottom of screen
+  - Fallback colored blocks when no font available (green for Resume, red for Exit)
+  - Uses GameConstants for all dimensions and values
+  - Split into helper methods: DrawGameWorld(), DrawPauseMenu(), DrawTitle(), DrawMenuOptions(), DrawControlsHint(), DrawFallbackMenu()
+- [x] Add comprehensive XML documentation - **DONE**
+  - Class-level documentation
+  - All 15 constructor parameters documented
+  - Method documentation for all public and private methods
+- [x] Build passed with 0 errors, 0 warnings
 
 #### Step 4.7: Extract Victory State
 - [ ] Create `States/VictoryState.cs`
