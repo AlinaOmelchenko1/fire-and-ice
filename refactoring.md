@@ -286,10 +286,43 @@
   - Method documentation for all public and private methods
 - [x] Build passed with 0 errors, 0 warnings
 
-#### Step 4.4: Extract Playing State
-- [ ] Create `States/PlayingState.cs`
-- [ ] Move gameplay logic from Game1
-- [ ] Move gameplay rendering from Game1
+#### Step 4.4: Extract Playing State ✅ COMPLETED
+- [x] Create `States/PlayingState.cs` - **DONE**
+  - Inherits from BaseGameState
+  - Accepts all game entities as constructor parameters (players, keys, doors, flames, ice shards, platforms)
+  - Holds game state (_doorsOpening, _showHitboxes, _showTimerInfo)
+  - Uses Action<GameState> callback for state transitions
+  - Manages collision timer for fixed timestep physics
+- [x] Move gameplay logic from Game1 - **DONE**
+  - Player input processing
+  - Physics updates with fixed timestep (via GlobalTimer)
+  - Collision detection for both players
+  - Animation updates for all entities
+  - Key collection detection (CheckKeyCollection method)
+  - Door opening logic when both keys collected
+  - Victory condition checking (CheckVictoryCondition method)
+  - Game over condition checking (CheckGameOverCondition method)
+  - Debug toggle handling (H for hitboxes, T for timer info)
+  - Pause handling (Escape key)
+- [x] Move gameplay rendering from Game1 - **DONE**
+  - Level background rendering
+  - Door rendering (behind players)
+  - Flame and ice shard animations
+  - Key rendering
+  - Player rendering
+  - Debug hitbox visualization (DrawDebugInfo method)
+  - Surface type legend (DrawSurfaceTypeLegend method)
+  - Health bars with gradient colors (DrawHealthBar method)
+  - Key icons next to health bars (DrawPlayerKeyIcon method)
+  - Controls display
+  - Timer debug info (DrawTimerInfo method)
+  - All UI rendering split into helper methods
+- [x] Add comprehensive XML documentation - **DONE**
+  - Class-level documentation
+  - All 17 constructor parameters documented
+  - Method documentation for all public and private methods
+  - Clear separation of concerns with helper methods
+- [x] Build passed with 0 errors, 0 warnings
 
 #### Step 4.5: Extract Game Over State
 - [ ] Create `States/GameOverState.cs`
