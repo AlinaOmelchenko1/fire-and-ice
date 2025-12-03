@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("fire and ice")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+20257536e5869701d679decf76ba52d918527bf2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7eb07ad2873d785388d1c96bef527b44d5271762")]
 [assembly: System.Reflection.AssemblyProductAttribute("fire and ice")]
 [assembly: System.Reflection.AssemblyTitleAttribute("fire and ice")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
