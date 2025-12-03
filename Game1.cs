@@ -56,7 +56,6 @@ namespace fire_and_ice
 
         protected override void Initialize()
         {
-            _collisionTimer = new GlobalTimer();
             base.Initialize();
         }
 
@@ -86,18 +85,29 @@ namespace fire_and_ice
             _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
 
-            // Load collision map
-            Texture2D collisionMapTexture;
+            // Load collision platforms - try collision map first, fallback to manual platforms
             try
             {
-                collisionMapTexture = Content.Load<Texture2D>("first_level_collision");
+                Texture2D collisionMapTexture = Content.Load<Texture2D>("first_level_collision");
+                CollisionMapReader collisionReader = new CollisionMapReader(collisionMapTexture);
+                _platforms = collisionReader.ExtractCollisionRectangles();
+
+                // Verify we got platforms
+                if (_platforms == null || _platforms.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("Warning: Collision map returned no platforms, using manual platforms");
+                    _platforms = LevelPlatforms.GetLevel1Platforms();
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"Loaded {_platforms.Count} platforms from collision map");
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                collisionMapTexture = _levelTexture;
+                System.Diagnostics.Debug.WriteLine($"Failed to load collision map: {ex.Message}. Using manual platforms.");
+                _platforms = LevelPlatforms.GetLevel1Platforms();
             }
-            CollisionMapReader collisionReader = new CollisionMapReader(collisionMapTexture);
-            _platforms = collisionReader.ExtractCollisionRectangles();
 
             // Player 1 - Original (white/default color) - WASD + Space controls
             _player = new Player(heroTexture, GameConstants.SpawnPositions.Player1Start);

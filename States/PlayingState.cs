@@ -98,12 +98,26 @@ namespace fire_and_ice.States
 
         /// <summary>
         /// Called when entering the playing state.
-        /// Resets doors opening flag.
+        /// Resets players to spawn positions, resets keys and doors, and resets doors opening flag.
         /// </summary>
         public override void Enter()
         {
+            // Reset players to their spawn positions
+            _player.Reset(GameConstants.SpawnPositions.Player1Start);
+            _player2.Reset(GameConstants.SpawnPositions.Player2Start);
+
+            // Reset keys (they are recreated in Game1.RestartGame, but also reset their collected state here)
+            _key1.IsCollected = false;
+            _key1.PlayerOwner = 0;
+            _key2.IsCollected = false;
+            _key2.PlayerOwner = 0;
+
+            // Reset doors
+            _door1.Reset();
+            _door2.Reset();
+
             _doorsOpening = false;
-            System.Diagnostics.Debug.WriteLine("Entered Playing state");
+            System.Diagnostics.Debug.WriteLine("Entered Playing state - Players, keys, and doors reset");
         }
 
         /// <summary>
