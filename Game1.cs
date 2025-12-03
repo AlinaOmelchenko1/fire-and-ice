@@ -85,29 +85,10 @@ namespace fire_and_ice
             _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
 
-            // Load collision platforms - try collision map first, fallback to manual platforms
-            try
-            {
-                Texture2D collisionMapTexture = Content.Load<Texture2D>("first_level_collision");
-                CollisionMapReader collisionReader = new CollisionMapReader(collisionMapTexture);
-                _platforms = collisionReader.ExtractCollisionRectangles();
-
-                // Verify we got platforms
-                if (_platforms == null || _platforms.Count == 0)
-                {
-                    System.Diagnostics.Debug.WriteLine("Warning: Collision map returned no platforms, using manual platforms");
-                    _platforms = LevelPlatforms.GetLevel1Platforms();
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"Loaded {_platforms.Count} platforms from collision map");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to load collision map: {ex.Message}. Using manual platforms.");
-                _platforms = LevelPlatforms.GetLevel1Platforms();
-            }
+            // Load platforms using manual platform definition
+            // NOTE: Collision map doesn't include fire/ice hazards, so we use manual platforms
+            _platforms = LevelPlatforms.GetLevel1Platforms();
+            System.Diagnostics.Debug.WriteLine($"Loaded {_platforms.Count} platforms from manual platform list");
 
             // Player 1 - Original (white/default color) - WASD + Space controls
             _player = new Player(heroTexture, GameConstants.SpawnPositions.Player1Start);
@@ -118,6 +99,7 @@ namespace fire_and_ice
             _player.JumpKey1 = Keys.W;
             _player.JumpKey2 = Keys.Space;
             _player.JumpKey3 = Keys.None; // Not used
+            System.Diagnostics.Debug.WriteLine($"Player 1 created at spawn: {GameConstants.SpawnPositions.Player1Start}");
 
             // Player 2 - Ice character, spawns in opposite corner (right side) - Arrow keys
             _player2 = new Player(character2Texture, GameConstants.SpawnPositions.Player2Start); // 4 frames (default)
@@ -128,6 +110,7 @@ namespace fire_and_ice
             _player2.JumpKey1 = Keys.Up;
             _player2.JumpKey2 = Keys.RightControl;
             _player2.JumpKey3 = Keys.RightShift;
+            System.Diagnostics.Debug.WriteLine($"Player 2 created at spawn: {GameConstants.SpawnPositions.Player2Start}");
 
             // Initialize keys - spawn at specific locations
             _key1 = new Key(GameConstants.SpawnPositions.Key1Position); // Left upper corner of left wooden crate
@@ -169,7 +152,10 @@ namespace fire_and_ice
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine($"Loaded {_platforms.Count} platforms");
+            System.Diagnostics.Debug.WriteLine($"=== PLATFORM LOADING COMPLETE ===");
+            System.Diagnostics.Debug.WriteLine($"Total platforms: {_platforms.Count}");
+            System.Diagnostics.Debug.WriteLine($"Fire platforms: {_platforms.FindAll(p => p.Type == SurfaceType.Fire).Count}");
+            System.Diagnostics.Debug.WriteLine($"Ice hazard platforms: {_platforms.FindAll(p => p.Type == SurfaceType.IceHazard).Count}");
             System.Diagnostics.Debug.WriteLine($"Created {_flames.Count} animated flames");
             System.Diagnostics.Debug.WriteLine($"Created {_iceShards.Count} animated ice shards");
 
