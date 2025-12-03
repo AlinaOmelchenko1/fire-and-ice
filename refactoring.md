@@ -324,10 +324,29 @@
   - Clear separation of concerns with helper methods
 - [x] Build passed with 0 errors, 0 warnings
 
-#### Step 4.5: Extract Game Over State
-- [ ] Create `States/GameOverState.cs`
-- [ ] Move game over logic from Game1
-- [ ] Move game over rendering from Game1
+#### Step 4.5: Extract Game Over State ✅ COMPLETED
+- [x] Create `States/GameOverState.cs` - **DONE**
+  - Inherits from BaseGameState
+  - Holds game over timer
+  - Uses Action callback for restarting the game
+  - Accepts required textures, font, and players
+- [x] Move game over logic from Game1 - **DONE**
+  - Timer tracking for delay before allowing restart
+  - Restart input handling (Enter or Space after delay)
+  - Debug logging for timer and restart events
+- [x] Move game over rendering from Game1 - **DONE**
+  - Greyed-out game world rendering (50% gray)
+  - Semi-transparent black overlay (70% opacity)
+  - Red modal window centered on screen
+  - "GAME OVER" text centered in modal window
+  - Restart prompt displayed after delay period
+  - Uses GameConstants for all dimensions and delays
+  - Split into helper methods: DrawGameOverText() and DrawRestartPrompt()
+- [x] Add comprehensive XML documentation - **DONE**
+  - Class-level documentation
+  - Constructor parameter documentation
+  - Method documentation for all public and private methods
+- [x] Build passed with 0 errors, 0 warnings
 
 #### Step 4.6: Extract Paused State
 - [ ] Create `States/PausedState.cs`
